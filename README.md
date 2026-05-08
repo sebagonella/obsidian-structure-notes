@@ -21,9 +21,9 @@ Um vault de Obsidian usado a sério vira, com o tempo, um sistema com regras pr�
 
 | Arquivo            | Conteúdo                                                                |
 |--------------------|-------------------------------------------------------------------------|
-| `ARCHITECTURE.md`  | Visão geral: taxonomia, convenções, fluxos de captura, integrações     |
-| `CLAUDE.md`        | Regras de privacidade aplicadas a esta pasta — usadas pelo Claude Code |
-| `README.md`        | Este arquivo                                                            |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Visão geral: taxonomia, convenções, fluxos de captura, integrações     |
+| [`CLAUDE.md`](CLAUDE.md)             | Regras de privacidade aplicadas a esta pasta — usadas pelo Claude Code |
+| `README.md`                          | Este arquivo                                                            |
 
 ---
 
@@ -34,7 +34,7 @@ Um vault de Obsidian usado a sério vira, com o tempo, um sistema com regras pr�
 - Endpoints, webhooks, tokens, chaves ou credenciais
 - Capturas de tela do vault em uso
 
-A separação não é casual: a pasta `PUBLICO/` vive dentro de um vault maior cuja maior parte é privada por design. As regras em `CLAUDE.md` deste diretório existem justamente para que essa fronteira não seja cruzada por engano.
+A separação não é casual: a pasta `PUBLICO/` vive dentro de um vault maior cuja maior parte é privada por design. As regras em [`CLAUDE.md`](CLAUDE.md) deste diretório existem justamente para que essa fronteira não seja cruzada por engano.
 
 ---
 
@@ -48,7 +48,7 @@ A documentação é mantida em conjunto com o vault, usando [Claude Code](https:
 
 Um subagent dedicado (`privacy-reviewer`) opera em contexto isolado para auditar conteúdo candidato a publicação, reduzindo o risco de vazamento por inferência.
 
-A regra-gatilho declarada no `CLAUDE.md` raiz do vault é: **toda mudança estrutural propaga para `ARCHITECTURE.md`**, antes de qualquer sync.
+A regra-gatilho declarada no `CLAUDE.md` raiz do vault é: **toda mudança estrutural propaga para [`ARCHITECTURE.md`](ARCHITECTURE.md)**, antes de qualquer sync.
 
 ---
 

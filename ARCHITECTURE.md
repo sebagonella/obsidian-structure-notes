@@ -2,7 +2,7 @@
 
 > Documentação de alto nível da arquitetura deste vault Obsidian.
 > Este arquivo descreve **como** o vault é organizado, **não o que** ele contém.
-> Para regras de privacidade aplicadas a este documento, ver `CLAUDE.md` desta pasta.
+> Para regras de privacidade aplicadas a este documento, ver [`CLAUDE.md`](CLAUDE.md) desta pasta.
 
 ---
 
@@ -277,23 +277,23 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 
 | Data       | Decisão                                                                                       | Motivo                                                                              |
 |------------|-----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| YYYY-MM-DD | Adoção de PARA com prefixos `NN_NOME` em maiúsculas                                           | Ordenação previsível e separação visual entre conteúdo de trabalho e meta-pastas    |
-| YYYY-MM-DD | Documentação do vault sob `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/`                             | Manter docs do vault dentro do próprio vault, com camada pública separada           |
-| YYYY-MM-DD | Pasta `PUBLICO/` em repo separado, sincronizada por cópia via `rsync`, sem auto-commit/push   | Defesa em camadas: separação física do clone + revisão humana antes de cada push    |
-| YYYY-MM-DD | `_PROJETO.md` por projeto em vez de uma única lista global                                    | Cada projeto carrega contexto próprio para o agente, com escopo isolado             |
-| YYYY-MM-DD | Metadado `projeto: <slug>` obrigatório em todas as notas dentro de `20_PROJETOS/`             | Garante rastreabilidade e queries determinísticas; vale também para arquivados      |
-| YYYY-MM-DD | Estrutura de arquivados `20_PROJETOS/ARQUIVADOS/<categoria>/<YYYY>/<slug>/`                   | Preserva histórico de projetos concluídos sem poluir a área ativa                   |
-| YYYY-MM-DD | Templates como fonte da verdade do frontmatter; mudanças no padrão começam pelo template      | Evita drift entre convenção e notas existentes                                      |
-| YYYY-MM-DD | Tags hierárquicas em português, minúsculas, sem acento                                        | Compatibilidade entre clientes e consistência visual                                |
-| YYYY-MM-DD | Skills separadas para sessão de vault (`/vault-*`) e sessão de projeto técnico (`/session-*`) | Manutenção do vault e desenvolvimento de software têm contextos distintos           |
-| YYYY-MM-DD | Subagent dedicado de privacidade para conteúdo candidato a publicação                         | Auditor opera em contexto isolado, sem ler notas privadas que o agente principal viu |
+| 2025-12-14 | Adoção de PARA com prefixos `NN_NOME` em maiúsculas                                           | Ordenação previsível e separação visual entre conteúdo de trabalho e meta-pastas    |
+| 2026-05-08 | Documentação do vault sob `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/`                             | Manter docs do vault dentro do próprio vault, com camada pública separada           |
+| 2026-05-08 | Pasta `PUBLICO/` em repo separado, sincronizada por cópia via `rsync`, sem auto-commit/push   | Defesa em camadas: separação física do clone + revisão humana antes de cada push    |
+| 2025-12-14 | `_PROJETO.md` por projeto em vez de uma única lista global                                    | Cada projeto carrega contexto próprio para o agente, com escopo isolado             |
+| 2026-04-12 | Metadado `projeto: <slug>` obrigatório em todas as notas dentro de `20_PROJETOS/`             | Garante rastreabilidade e queries determinísticas; vale também para arquivados      |
+| 2026-05-06 | Estrutura de arquivados `20_PROJETOS/ARQUIVADOS/<categoria>/<YYYY>/<slug>/`                   | Preserva histórico de projetos concluídos sem poluir a área ativa                   |
+| 2025-12-14 | Templates como fonte da verdade do frontmatter; mudanças no padrão começam pelo template      | Evita drift entre convenção e notas existentes                                      |
+| 2026-05-03 | Tags hierárquicas em português, minúsculas, sem acento                                        | Compatibilidade entre clientes e consistência visual                                |
+| 2025-12-14 | Skills separadas para sessão de vault (`/vault-*`) e sessão de projeto técnico (`/session-*`) | Manutenção do vault e desenvolvimento de software têm contextos distintos           |
+| 2026-05-08 | Subagent dedicado de privacidade para conteúdo candidato a publicação                         | Auditor opera em contexto isolado, sem ler notas privadas que o agente principal viu |
 
 ---
 
 ## 11. Changelog
 
-- **YYYY-MM-DD** — primeira versão pública desta `ARCHITECTURE.md`. Substitui o esqueleto inicial pela arquitetura real do vault.
+- **2026-05-08** — primeira versão pública desta `ARCHITECTURE.md`. Substitui o esqueleto inicial pela arquitetura real do vault.
 
 ---
 
-*Este documento é mantido em conjunto com `CLAUDE.md` desta pasta. Mudanças estruturais no vault devem gerar atualizações aqui antes do próximo sync com o repositório público.*
+*Este documento é mantido em conjunto com [`CLAUDE.md`](CLAUDE.md) desta pasta. Mudanças estruturais no vault devem gerar atualizações aqui antes do próximo sync com o repositório público.*

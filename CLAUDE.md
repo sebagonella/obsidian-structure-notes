@@ -11,7 +11,7 @@ Por brevidade, o restante deste documento usa o alias `<PUBLICO>` para `00_SISTE
 
 ## Estrutura geral
 
-A taxonomia real do vault, com pastas de primeiro/segundo nível e convenções de nomeação, está descrita em `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/ARCHITECTURE.md` (§2 e §3). Recorte mínimo relevante para esta pasta:
+A taxonomia real do vault, com pastas de primeiro/segundo nível e convenções de nomeação, está descrita em [`ARCHITECTURE.md`](ARCHITECTURE.md) (§2 e §3). Recorte mínimo relevante para esta pasta:
 
 ```
 vault/
@@ -28,7 +28,7 @@ vault/
         └── sync-publico.sh     # PUBLICO/ → clone local do repo público
 ```
 
-Para o restante (`10_CALENDARIO/`, `20_PROJETOS/`, `30_AREAS/`, `40_RECURSOS/`, `99_INBOX/`, `.claude/`), consultar `ARCHITECTURE.md` em vez de duplicar aqui — esta seção fica em sincronia automática.
+Para o restante (`10_CALENDARIO/`, `20_PROJETOS/`, `30_AREAS/`, `40_RECURSOS/`, `99_INBOX/`, `.claude/`), consultar [`ARCHITECTURE.md`](ARCHITECTURE.md) em vez de duplicar aqui — esta seção fica em sincronia automática.
 
 ---
 
@@ -42,7 +42,7 @@ Para o restante (`10_CALENDARIO/`, `20_PROJETOS/`, `30_AREAS/`, `40_RECURSOS/`, 
 
 ## Regra-gatilho: arquitetura ↔ documentação pública
 
-**Sempre que houver mudança em qualquer dos itens abaixo, propor (não aplicar automaticamente) edição correspondente em `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/ARCHITECTURE.md`:**
+**Sempre que houver mudança em qualquer dos itens abaixo, propor (não aplicar automaticamente) edição correspondente em [`ARCHITECTURE.md`](ARCHITECTURE.md):**
 
 - Taxonomia de pastas de primeiro e segundo nível
 - Convenções de nomeação de arquivos ou frontmatter
@@ -50,7 +50,7 @@ Para o restante (`10_CALENDARIO/`, `20_PROJETOS/`, `30_AREAS/`, `40_RECURSOS/`, 
 - Integrações externas (serviços, automações, APIs)
 - Convenções de tags ou MOCs
 
-Antes de editar `ARCHITECTURE.md`, executar a auditoria de privacidade descrita em `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/CLAUDE.md`.
+Antes de editar [`ARCHITECTURE.md`](ARCHITECTURE.md), executar a auditoria de privacidade descrita neste mesmo arquivo.
 
 ---
 
@@ -77,7 +77,7 @@ Sem essas variáveis, `/doc-sync` aborta na pré-condição. O script real é `0
 
 ## Workflow recomendado
 
-- **Mudanças estruturais** → atualizar primeiro o vault, depois rodar `/doc-update` para propor edições em `ARCHITECTURE.md`.
+- **Mudanças estruturais** → atualizar primeiro o vault, depois rodar `/doc-update` para propor edições em [`ARCHITECTURE.md`](ARCHITECTURE.md).
 - **Antes de qualquer push para o repo público** → rodar `/doc-audit` e depois `/doc-sync`. Só executar o sync real (sem `--dry-run`) após revisar o dry-run.
 - **Dúvida sobre o que pode virar público** → assumir privado e perguntar.
 - **Bootstrap inicial de PUBLICO/** → usar o prompt em `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PRIVADO/PROMPTS/bootstrap-publico.md`.
