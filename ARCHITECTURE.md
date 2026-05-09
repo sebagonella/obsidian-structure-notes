@@ -238,7 +238,8 @@ Credenciais, tokens, hosts e endpoints internos **não** aparecem nesta document
   - `tipo/{...}` — espelha o frontmatter `tipo`
   - `status/{...}` — espelha o frontmatter `status`
   - `ti/{python, obsidian, ...}`
-  - `pessoa/{...}`, `entidade/{...}`, `projeto/{slug}`
+  - `pessoa/{...}`, `entidade/{...}`
+  - `projeto/{slug}`
 - Tags servem para filtragem visual; valores únicos por nota ficam no **frontmatter**, sem duplicação.
 
 ---
