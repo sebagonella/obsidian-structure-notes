@@ -44,7 +44,15 @@ vault/
 │   ├── PROFISSIONAL/<slug>/
 │   └── ARQUIVADOS/<categoria>/<YYYY>/<slug>/
 ├── 30_AREAS/                              # responsabilidades contínuas (sem data de fim)
+│   ├── CARREIRA/                          # desenvolvimento profissional contínuo
+│   ├── FAMILIA/                           # contexto familiar
+│   ├── FINANCAS/                          # planejamento financeiro
+│   ├── GARAGEM/                           # manutenção de bens duráveis
+│   ├── SAUDE/                             # métricas, exames, rotinas, análises
+│   └── TRABALHO/                          # responsabilidades contínuas do trabalho
 ├── 40_RECURSOS/                           # referências, biblioteca, material durável
+│   ├── LEGADO/                            # destino de importações de outros sistemas
+│   └── TI/                                # referências técnicas (linguagens, ferramentas)
 ├── 99_INBOX/                              # captura crua, antes da triagem
 ├── MOC-home.md                            # índice geral do vault
 └── .claude/                               # commands, skills locais e subagents do Claude Code
@@ -96,8 +104,8 @@ Toda nota processada pelo Claude Code recebe ou preserva frontmatter YAML mínim
 data: 2025-03-14
 data_atualizacao: 2025-03-14 09:30
 tipo: daily | weekly | monthly | yearly | projeto | sessao | sessao-vault |
-      decisao | pesquisa | tarefa | saude | legado | webclipper |
-      moc | documentacao
+      decisao | pesquisa | tarefa | saude | analise-saude | legado |
+      webclipper | moc | documentacao
 status: ideia | planejamento | execucao | revisar | concluido | arquivado
 tags: []
 ---
@@ -204,6 +212,10 @@ Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECU
 
 **Princípio:** templates são a **fonte da verdade do frontmatter**. Mudanças de convenção alteram o template antes das notas existentes.
 
+**Saúde — fluxo dual.** Métricas longitudinais da área de saúde têm duas origens: (1) o template manual `SAUDE-DIARIO.md` (registro pontual com `tipo: saude`); (2) um pipeline auto-gerado fora deste vault que escreve diretamente em `30_AREAS/SAUDE/METRICAS/<subpasta-de-integração>/` mantendo o mesmo `tipo: saude` + tag granular `saude/<subarea>`. Os campos numéricos específicos não aparecem nesta documentação por convenção de privacidade.
+
+**Ownership híbrido de skills.** Algumas skills locais (`.claude/skills/<nome>/`) têm fonte canônica fora do vault, em repositórios técnicos do próprio usuário. Nesses casos, a cópia versionada no vault carrega header `AUTO-GERADO` apontando para o repo de origem, e a propagação acontece via script de sync com detecção de drift por checksum (sem auto-commit). Edições devem ser feitas no repo de origem; o vault recebe a cópia revisada.
+
 ---
 
 ## 7. Integrações externas
@@ -215,10 +227,12 @@ Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECU
 | Obsidian — Dataview                       | Queries em MOCs e listas dinâmicas                                     |
 | Obsidian — Tasks                          | Indexação de tarefas inline                                            |
 | Obsidian — Tracker                        | Gráficos longitudinais a partir de frontmatter                         |
+| Obsidian — Contribution Graph             | Heatmaps anuais (consistência de hábitos, contagem por dia)            |
 | Obsidian — Linter                         | Mantém `data_atualizacao` consistente                                  |
 | Obsidian — Smart Connections              | Indexação semântica local (estado fora de versão)                      |
 | Google Drive                              | Sync entre dispositivos do vault                                       |
 | Claude Code (CLI) + MCP Obsidian          | Manutenção do vault e desta documentação via REST API local            |
+| Subagent `privacy-reviewer`               | Auditor isolado de privacidade para conteúdo candidato a publicação    |
 | NotebookLM                                | Pesquisa externa cujo resultado é consolidado como nota                |
 | GitHub (repositório público)              | Espelho de `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/`             |
 
@@ -242,6 +256,26 @@ Credenciais, tokens, hosts e endpoints internos **não** aparecem nesta document
   - `projeto/{slug}`
 - Tags servem para filtragem visual; valores únicos por nota ficam no **frontmatter**, sem duplicação.
 
+**Convenção interna por hub.** Áreas com muitas subdivisões podem usar uma família de tag local fora das oficiais — o caso atual é `saude/<subarea>` (notas em `30_AREAS/SAUDE/METRICAS/`), com subáreas como `diario`, `sono`, `treino`, `peso`, `pressao`, `glicose`, `analise`. Funciona como recorte visual; queries quantitativas se apoiam em `tipo` + path scope, não em tag.
+
+---
+
+## 8.5 MOCs
+
+Cada pasta de primeiro nível possui um arquivo-índice `MOC-<nome>.md` na sua raiz, e um `MOC-home.md` global vive na raiz do vault. Os MOCs concentram navegação, queries Dataview/Tasks e seções manuais.
+
+| MOC                                | Papel                                                      |
+|------------------------------------|------------------------------------------------------------|
+| `MOC-home.md` (raiz)               | Navegação geral entre os hubs de 1º nível                  |
+| `00_SISTEMA/MOC-sistema.md`        | Navegação dos meta-recursos (templates, scripts, docs)     |
+| `10_CALENDARIO/MOC-calendario.md`  | Atalhos para dailies/weeklies/monthlies/yearlies recentes  |
+| `20_PROJETOS/MOC-projetos.md`      | Projetos por contexto e status                             |
+| `30_AREAS/MOC-areas.md`            | Hub das áreas contínuas                                    |
+| `40_RECURSOS/MOC-recursos.md`      | Biblioteca/Zettelkasten                                    |
+| `99_INBOX/MOC-inbox.md`            | Resumo, tarefas de triagem e instruções de fluxo           |
+
+Hubs de área (ex.: `30_AREAS/SAUDE/MOC-saude.md`) seguem o mesmo padrão e tipicamente apontam para sub-MOCs auto-gerados quando existem (caso de `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`).
+
 ---
 
 ## 9. Manutenção
@@ -250,6 +284,7 @@ Credenciais, tokens, hosts e endpoints internos **não** aparecem nesta document
 
 - **Diária:** triagem do `99_INBOX/` → mover para destino correto; encerrar o dia com nota de sessão e log.
 - **Semanal/Mensal/Anual:** rodar os reviews periódicos via skills locais (`/weekly-review`, `/monthly-review`, `/yearly-review`), que agregam o nível imediatamente abaixo.
+- **Sob demanda — área de saúde:** skill local `/analise-saude` gera relatório informativo (não-diagnóstico) de janelas pré-definidas (7d/30d/6m/1y/all) a partir das métricas longitudinais da área. Output em `30_AREAS/SAUDE/METRICAS/ANALISES/`.
 - **Sob demanda:** validação de metadados em `20_PROJETOS/` (script de validação roda em dry-run por padrão); arquivamento de projetos concluídos via skill local `/projeto-arquivar`, que move a pasta para `20_PROJETOS/ARQUIVADOS/<categoria>/<YYYY>/<slug>/` e marca `status: arquivado`.
 - **Trimestral:** auditoria de convenções; rodar `/doc-update` (propõe edições nesta `ARCHITECTURE.md`) e `/doc-audit` (auditoria de privacidade).
 
@@ -288,12 +323,15 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 | 2026-05-03 | Tags hierárquicas em português, minúsculas, sem acento                                        | Compatibilidade entre clientes e consistência visual                                |
 | 2025-12-14 | Skills separadas para sessão de vault (`/vault-*`) e sessão de projeto técnico (`/session-*`) | Manutenção do vault e desenvolvimento de software têm contextos distintos           |
 | 2026-05-08 | Subagent dedicado de privacidade para conteúdo candidato a publicação                         | Auditor opera em contexto isolado, sem ler notas privadas que o agente principal viu |
+| 2026-05-09 | Frontmatter dos relatórios `analise-saude` em PT, alinhado ao padrão do vault                 | Coerência com convenção PT do vault; caminho mais simples para queries futuras       |
+| 2026-05-10 | `tipo: saude` uniforme em toda a área + tags granulares `saude/<subarea>` para discriminação  | Reusa enum oficial sem propor expansão; granularidade fica nas tags + path scope     |
 
 ---
 
 ## 11. Changelog
 
 - **2026-05-08** — primeira versão pública desta `ARCHITECTURE.md`. Substitui o esqueleto inicial pela arquitetura real do vault.
+- **2026-05-10** — atualização de §2 (subáreas reais de `30_AREAS/` e `40_RECURSOS/`), §4 (`analise-saude` no enum `tipo`), §6 (notas sobre fluxo dual de saúde e ownership híbrido de skills), §7 (Contribution Graph e subagent `privacy-reviewer`), §8 (formalização da convenção `saude/<subarea>`), §8.5 nova (convenção de MOCs), §9 (skill `/analise-saude`), §10 (decisões 2026-05-09 e 2026-05-10). Auditoria de privacidade: path concreto da subpasta de integração de saúde substituído por placeholder em §6 e §8.5 para reduzir inferência sobre a fonte de dados.
 
 ---
 
