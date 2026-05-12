@@ -49,7 +49,8 @@ vault/
 │   ├── FINANCAS/                          # planejamento financeiro
 │   ├── GARAGEM/                           # manutenção de bens duráveis
 │   ├── SAUDE/                             # métricas, exames, rotinas, análises
-│   └── TRABALHO/                          # responsabilidades contínuas do trabalho
+│   ├── TRABALHO/                          # responsabilidades contínuas do trabalho
+│   └── VAULT/                             # meta-manutenção do vault (sessões, tarefas, decisões, pesquisas)
 ├── 40_RECURSOS/                           # referências, biblioteca, material durável
 │   ├── LEGADO/                            # destino de importações de outros sistemas
 │   └── TI/                                # referências técnicas (linguagens, ferramentas)
@@ -116,6 +117,7 @@ tags: []
 - **Daily:** acrescenta `dia_semana`.
 - **Sessão de projeto:** acrescenta `hora`, `session_id`, `branch`, `mensagens`, `projeto: <slug>`.
 - **Notas dentro de `20_PROJETOS/...`:** **obrigatoriamente** `projeto: <slug>` no frontmatter. Slug = nome da pasta mais profunda do projeto. Tarefas inline (checkbox) usam as tags `#projeto/<slug>` + `#tipo/tarefa`.
+- **Notas dentro de `30_AREAS/...`:** **obrigatoriamente** `area: <slug>` no frontmatter. Slug = nome da subpasta de área em minúsculas (ex.: `area: saude`, `area: vault`). Regra simétrica à de `projeto: <slug>`; aplica-se a notas operacionais (tarefas, decisões, pesquisas) dentro da área. MOCs e sub-MOCs auto-gerados ficam isentos.
 - **Pesquisa:** acrescenta `notebook_id`, `fontes`.
 - **Saúde:** notas da área de saúde possuem campos numéricos para acompanhamento longitudinal (métricas físicas, sinais vitais, atividade). Os campos específicos não aparecem nesta documentação por convenção de privacidade.
 
@@ -274,7 +276,7 @@ Cada pasta de primeiro nível possui um arquivo-índice `MOC-<nome>.md` na sua r
 | `40_RECURSOS/MOC-recursos.md`      | Biblioteca/Zettelkasten                                    |
 | `99_INBOX/MOC-inbox.md`            | Resumo, tarefas de triagem e instruções de fluxo           |
 
-Hubs de área (ex.: `30_AREAS/SAUDE/MOC-saude.md`) seguem o mesmo padrão e tipicamente apontam para sub-MOCs auto-gerados quando existem (caso de `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`).
+Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exemplos vigentes: `30_AREAS/SAUDE/MOC-saude.md` (com sub-MOCs auto-gerados `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`); `30_AREAS/VAULT/MOC-vault.md` (hub de meta-manutenção do vault, com queries para tarefas/decisões/pesquisas internas e listagem das sessões de manutenção em `10_CALENDARIO/01_DAILY/sessoes-vault/`). A estrutura interna de subpastas fica livre por área — cada uma organiza conforme a natureza do conteúdo (subáreas temáticas em SAUDE; subpastas por tipo de nota em VAULT).
 
 ---
 
@@ -325,6 +327,7 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 | 2026-05-08 | Subagent dedicado de privacidade para conteúdo candidato a publicação                         | Auditor opera em contexto isolado, sem ler notas privadas que o agente principal viu |
 | 2026-05-09 | Frontmatter dos relatórios `analise-saude` em PT, alinhado ao padrão do vault                 | Coerência com convenção PT do vault; caminho mais simples para queries futuras       |
 | 2026-05-10 | `tipo: saude` uniforme em toda a área + tags granulares `saude/<subarea>` para discriminação  | Reusa enum oficial sem propor expansão; granularidade fica nas tags + path scope     |
+| 2026-05-11 | Manutenção e governança do próprio vault tratadas como **área contínua** em `30_AREAS/VAULT/`; campo `area: <slug>` torna-se obrigatório em notas operacionais sob `30_AREAS/...` (simétrico a `projeto: <slug>`) | Trabalho recorrente, sem data de fim; sessões pontuais já vivem em `sessoes-vault/`. Frontmatter explícito viabiliza queries determinísticas por área no Dataview/Tasks |
 
 ---
 
@@ -332,6 +335,7 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 
 - **2026-05-08** — primeira versão pública desta `ARCHITECTURE.md`. Substitui o esqueleto inicial pela arquitetura real do vault.
 - **2026-05-10** — atualização de §2 (subáreas reais de `30_AREAS/` e `40_RECURSOS/`), §4 (`analise-saude` no enum `tipo`), §6 (notas sobre fluxo dual de saúde e ownership híbrido de skills), §7 (Contribution Graph e subagent `privacy-reviewer`), §8 (formalização da convenção `saude/<subarea>`), §8.5 nova (convenção de MOCs), §9 (skill `/analise-saude`), §10 (decisões 2026-05-09 e 2026-05-10). Auditoria de privacidade: path concreto da subpasta de integração de saúde substituído por placeholder em §6 e §8.5 para reduzir inferência sobre a fonte de dados.
+- **2026-05-11** — adição de `30_AREAS/VAULT/` como subárea contínua (§2), `MOC-vault.md` no padrão de hub de área (§8.5) e regra obrigatória de `area: <slug>` em notas operacionais sob `30_AREAS/...` (§4). Nova decisão em §10. Auditoria de privacidade: conteúdo estritamente meta-estrutural — sem dados pessoais ou de terceiros. Convenções `area/<slug>` em tags (§8) e padronização de subpastas em áreas ficaram postergadas por falta de precedente em mais de uma área.
 
 ---
 
