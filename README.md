@@ -56,7 +56,7 @@ A regra-gatilho declarada no `CLAUDE.md` raiz do vault é: **toda mudança estru
 
 Se você está montando um sistema de notas próprio, esta documentação pode servir como referência de:
 
-- Como adaptar PARA com prefixos numéricos para ordenação determinística
+- Como adotar PARA (Projects/Areas/Resources/Archive) com prefixos numéricos para ordenação determinística
 - Como estruturar captura multi-canal (manual, web clipper, pesquisa externa, importação de legados) com um inbox único
 - Como dividir documentação técnica entre uma camada pública e uma privada no mesmo vault
 - Como instrumentar um vault para trabalhar em conjunto com um agente de IA sem perder controle sobre privacidade

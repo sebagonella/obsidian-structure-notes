@@ -89,6 +89,10 @@ Padrão `NN_NOME` em caixa alta com underscore para o primeiro nível (`00_SISTE
 - **Sessão de manutenção do vault:** `30_AREAS/VAULT/sessoes/YYYY-MM-DD-slug.md`.
 - **Sessão de projeto técnico:** `20_PROJETOS/<categoria>/<slug>/sessoes/YYYY-MM-DD-slug.md`. Cada projeto também possui um arquivo-índice `_PROJETO.md` na raiz da pasta, que carrega contexto do projeto para o agente.
 
+### Particionamento por ano/mês em subpastas de alta volumetria
+
+Subpastas de área que recebem uma nota por dia (ou frequência similar) seguem o padrão `YYYY/MM/<nota>.md`, espelhando o agrupamento usado em `10_CALENDARIO/01_DAILY/`. O propósito é evitar diretórios planos com milhares de arquivos e tornar a navegação cronológica explícita. Aplicável a qualquer subpasta cuja cardinalidade cresça por dia — exemplos vigentes incluem subpastas de métricas longitudinais na área de saúde.
+
 ### Slugs
 
 - Kebab-case ASCII puro, sem caracteres reservados (`/ \ : * ? " < > |`).
@@ -117,6 +121,7 @@ tags: []
 - **Daily:** acrescenta `dia_semana`.
 - **Sessão de projeto:** acrescenta `hora`, `session_id`, `branch`, `mensagens`, `projeto: <slug>`.
 - **Notas dentro de `20_PROJETOS/...`:** **obrigatoriamente** `projeto: <slug>` no frontmatter. Slug = nome da pasta mais profunda do projeto. Tarefas inline (checkbox) usam as tags `#projeto/<slug>` + `#tipo/tarefa`.
+- **Arquivo-índice `_PROJETO.md`:** além dos campos comuns, carrega `repo_local` (caminho absoluto do repositório no FS local) e `repo_git` (URL HTTPS do remote git, vazia quando não houver `.git` ou remote configurado). Projetos só-vault podem ter ambos vazios.
 - **Notas dentro de `30_AREAS/...`:** **obrigatoriamente** `area: <slug>` no frontmatter. Slug = nome da subpasta de área em minúsculas (ex.: `area: saude`, `area: vault`). Regra simétrica à de `projeto: <slug>`; aplica-se a notas operacionais (tarefas, decisões, pesquisas) dentro da área. MOCs e sub-MOCs auto-gerados ficam isentos.
 - **Pesquisa:** acrescenta `notebook_id`, `fontes`.
 - **Saúde:** notas da área de saúde possuem campos numéricos para acompanhamento longitudinal (métricas físicas, sinais vitais, atividade). Os campos específicos não aparecem nesta documentação por convenção de privacidade.
@@ -276,7 +281,7 @@ Cada pasta de primeiro nível possui um arquivo-índice `MOC-<nome>.md` na sua r
 | `40_RECURSOS/MOC-recursos.md`      | Biblioteca/Zettelkasten                                    |
 | `99_INBOX/MOC-inbox.md`            | Resumo, tarefas de triagem e instruções de fluxo           |
 
-Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exemplos vigentes: `30_AREAS/SAUDE/MOC-saude.md` (com sub-MOCs auto-gerados `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`); `30_AREAS/VAULT/MOC-vault.md` (hub de meta-manutenção do vault, com queries para tarefas/decisões/pesquisas internas e listagem das sessões de manutenção em `30_AREAS/VAULT/sessoes/`). A estrutura interna de subpastas fica livre por área — cada uma organiza conforme a natureza do conteúdo (subáreas temáticas em SAUDE; subpastas por tipo de nota em VAULT, incluindo `sessoes/` própria da área).
+Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exemplos vigentes: `30_AREAS/SAUDE/MOC-saude.md` (com sub-MOCs auto-gerados `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`); `30_AREAS/VAULT/MOC-vault.md` (hub de meta-manutenção do vault, com queries para tarefas/decisões/pesquisas internas e listagem das sessões de manutenção em `30_AREAS/VAULT/sessoes/`). A estrutura interna de subpastas fica livre por área — cada uma organiza conforme a natureza do conteúdo (subáreas temáticas em SAUDE; subpastas por tipo de nota em VAULT, incluindo `sessoes/` própria da área). Pastas em `40_RECURSOS/LEGADO/` provenientes de importação de outros sistemas podem manter MOCs próprios herdados da estrutura original, sem necessariamente seguir o padrão de hub de área.
 
 ---
 
@@ -329,6 +334,8 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 | 2026-05-10 | `tipo: saude` uniforme em toda a área + tags granulares `saude/<subarea>` para discriminação  | Reusa enum oficial sem propor expansão; granularidade fica nas tags + path scope     |
 | 2026-05-11 | Manutenção e governança do próprio vault tratadas como **área contínua** em `30_AREAS/VAULT/`; campo `area: <slug>` torna-se obrigatório em notas operacionais sob `30_AREAS/...` (simétrico a `projeto: <slug>`) | Trabalho recorrente, sem data de fim; sessões pontuais vivem em `30_AREAS/VAULT/sessoes/`. Frontmatter explícito viabiliza queries determinísticas por área no Dataview/Tasks |
 | 2026-05-11 | Sessões de manutenção do vault migradas de `10_CALENDARIO/01_DAILY/sessoes-vault/` para `30_AREAS/VAULT/sessoes/`, com `area: vault` normalizado em todas as sessões existentes | Coerência com o modelo de área contínua: tudo ligado à governança do vault concentra-se no mesmo hub, simétrico a `20_PROJETOS/<slug>/sessoes/` |
+| 2026-05-13 | Campo `repo` no `_PROJETO.md` desdobrado em dois: `repo_local` (caminho absoluto no FS) e `repo_git` (URL HTTPS do remote git, vazia se não houver) | Semântica explícita habilita automações futuras (abrir no GitHub, validar remote, sincronizar status de PR) sem ambiguidade entre path local e URL remota |
+| 2026-05-13 | Particionamento `YYYY/MM/<nota>` formalizado como convenção genérica para subpastas de área com alta cardinalidade diária | Espelha o agrupamento do calendário; evita diretórios planos; receita de migração já validada em três subpastas distintas (DIARIO, SONO, TREINOS na área de saúde) |
 
 ---
 
@@ -336,8 +343,10 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 
 - **2026-05-08** — primeira versão pública desta `ARCHITECTURE.md`. Substitui o esqueleto inicial pela arquitetura real do vault.
 - **2026-05-10** — atualização de §2 (subáreas reais de `30_AREAS/` e `40_RECURSOS/`), §4 (`analise-saude` no enum `tipo`), §6 (notas sobre fluxo dual de saúde e ownership híbrido de skills), §7 (Contribution Graph e subagent `privacy-reviewer`), §8 (formalização da convenção `saude/<subarea>`), §8.5 nova (convenção de MOCs), §9 (skill `/analise-saude`), §10 (decisões 2026-05-09 e 2026-05-10). Auditoria de privacidade: path concreto da subpasta de integração de saúde substituído por placeholder em §6 e §8.5 para reduzir inferência sobre a fonte de dados.
-- **2026-05-11** — adição de `30_AREAS/VAULT/` como subárea contínua (§2), `MOC-vault.md` no padrão de hub de área (§8.5) e regra obrigatória de `area: <slug>` em notas operacionais sob `30_AREAS/...` (§4). Nova decisão em §10. Auditoria de privacidade: conteúdo estritamente meta-estrutural — sem dados pessoais ou de terceiros. Convenções `area/<slug>` em tags (§8) e padronização de subpastas em áreas ficaram postergadas por falta de precedente em mais de uma área.
+- **2026-05-11** — adição de `30_AREAS/VAULT/` como subárea contínua (§2), `MOC-vault.md` no padrão de hub de área (§8.5) e regra obrigatória de `area: <slug>` em notas operacionais sob `30_AREAS/...` (§4). Nova decisão em §10. Auditoria de privacidade: conteúdo estritamente meta-estrutural — sem dados pessoais ou de terceiros. A família de tag `area/<slug>` foi adotada apenas em VAULT por enquanto; a generalização para outras áreas e a padronização de subpastas aguardam precedente em mais de uma área.
 - **2026-05-11** — sessões de manutenção do vault movidas de `10_CALENDARIO/01_DAILY/sessoes-vault/` para `30_AREAS/VAULT/sessoes/` (§3, §8.5) e nova entrada em §10 registrando a mudança. Frontmatter de todas as sessões existentes normalizado com `area: vault`. Auditoria de privacidade: mudança puramente estrutural — sem PII, sem credenciais, sem caminhos sensíveis novos.
+- **2026-05-13** — desdobramento do campo `repo` em `repo_local` + `repo_git` no frontmatter do `_PROJETO.md` (§4) e nova entrada em §10. Convenção propagada para template, script de migração, script de arquivamento e notas existentes. Auditoria de privacidade: convenção descreve apenas o nome e a semântica dos campos; valores concretos (paths e URLs) permanecem em notas privadas.
+- **2026-05-13** — particionamento `YYYY/MM/<nota>` documentado como convenção genérica em §3 e nova entrada em §10; nota acrescentada em §8.5 sobre MOCs herdados em pastas de legado; entrada de 2026-05-11 no changelog reescrita para refletir a adoção pontual de `area/<slug>` em VAULT. Auditoria de privacidade: convenções estruturais; texto evita citar nomes concretos da subpasta de integração de saúde, em coerência com §6 e §8.5.
 
 ---
 
