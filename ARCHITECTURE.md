@@ -45,15 +45,15 @@ vault/
 │   └── ARQUIVADOS/<categoria>/<YYYY>/<slug>/
 ├── 30_AREAS/                              # responsabilidades contínuas (sem data de fim)
 │   ├── CARREIRA/                          # desenvolvimento profissional contínuo
-│   ├── FAMILIA/                           # contexto familiar
+│   ├── FAMILIA/                           # contexto familiar (placeholder — dir vazio)
 │   ├── FINANCAS/                          # planejamento financeiro
-│   ├── GARAGEM/                           # manutenção de bens duráveis
+│   ├── GARAGEM/                           # manutenção de bens duráveis (placeholder — dir vazio)
 │   ├── SAUDE/                             # métricas, exames, rotinas, análises
-│   ├── TRABALHO/                          # responsabilidades contínuas do trabalho
+│   ├── TRABALHO/                          # responsabilidades contínuas do trabalho (placeholder — dir vazio)
 │   └── VAULT/                             # meta-manutenção do vault (sessões, tarefas, decisões, pesquisas)
 ├── 40_RECURSOS/                           # referências, biblioteca, material durável
 │   ├── LEGADO/                            # destino de importações de outros sistemas
-│   └── TI/                                # referências técnicas (linguagens, ferramentas)
+│   └── TI/                                # referências técnicas (placeholder — dir vazio)
 ├── 99_INBOX/                              # captura crua, antes da triagem
 ├── MOC-home.md                            # índice geral do vault
 └── .claude/                               # commands, skills locais e subagents do Claude Code
@@ -233,6 +233,7 @@ Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECU
 | Obsidian — Templater                      | Engine de templates                                                    |
 | Obsidian — Dataview                       | Queries em MOCs e listas dinâmicas                                     |
 | Obsidian — Tasks                          | Indexação de tarefas inline                                            |
+| Obsidian — Bases                          | Banco de dados de projetos; `BASE-projetos.base` indexa e filtra `_PROJETO.md` em `20_PROJETOS/` |
 | Obsidian — Tracker                        | Gráficos longitudinais a partir de frontmatter                         |
 | Obsidian — Contribution Graph             | Heatmaps anuais (consistência de hábitos, contagem por dia)            |
 | Obsidian — Linter                         | Mantém `data_atualizacao` consistente                                  |
@@ -286,12 +287,14 @@ Cada pasta de primeiro nível possui um arquivo-índice `MOC-<nome>.md` na sua r
 | `40_RECURSOS/MOC-recursos.md`      | Biblioteca/Zettelkasten                                    |
 | `99_INBOX/MOC-inbox.md`            | Resumo, tarefas de triagem e instruções de fluxo           |
 
-Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exemplos vigentes: `30_AREAS/SAUDE/MOC-saude.md` (com sub-MOCs auto-gerados `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`); `30_AREAS/VAULT/MOC-vault.md` (hub de meta-manutenção do vault, com queries para tarefas/decisões/pesquisas internas e listagem das sessões de manutenção em `30_AREAS/VAULT/sessoes/`). A estrutura interna de subpastas fica livre por área — cada uma organiza conforme a natureza do conteúdo (subáreas temáticas em SAUDE; subpastas por tipo de nota em VAULT, incluindo `sessoes/` própria da área). Pastas em `40_RECURSOS/LEGADO/` provenientes de importação de outros sistemas podem manter MOCs próprios herdados da estrutura original, sem necessariamente seguir o padrão de hub de área.
+Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exemplos vigentes: `30_AREAS/SAUDE/MOC-saude.md` (com sub-MOCs auto-gerados `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`); `30_AREAS/VAULT/MOC-vault.md` (hub de meta-manutenção do vault, com queries para tarefas/decisões/pesquisas internas e listagem das sessões de manutenção em `30_AREAS/VAULT/sessoes/`); `30_AREAS/CARREIRA/MOC-carreira.md` (hub de desenvolvimento profissional, com queries para tarefas/decisões/pesquisas e sessões em `30_AREAS/CARREIRA/sessoes/`); `30_AREAS/FINANCAS/MOC-financas.md` (hub de planejamento financeiro, com queries para tarefas/decisões/pesquisas e sessões em `30_AREAS/FINANCAS/sessoes/`). A estrutura interna de subpastas fica livre por área — cada uma organiza conforme a natureza do conteúdo (subáreas temáticas em SAUDE; subpastas por tipo de nota em VAULT, CARREIRA e FINANCAS, incluindo `sessoes/` própria de cada área). Pastas em `40_RECURSOS/LEGADO/` provenientes de importação de outros sistemas podem manter MOCs próprios herdados da estrutura original, sem necessariamente seguir o padrão de hub de área.
 
 **Padrão de duas seções em MOCs.** Todo MOC e `_PROJETO.md` dos contextos `20_PROJETOS/`, `30_AREAS/` e `40_RECURSOS/` segue um padrão de duas seções de tarefas:
 
 1. **`## Tarefas pendentes`** — plugin Tasks; filtra `not done` por path + tag de contexto. MOCs de contexto específico usam `group by function` para agrupar tarefas pela família de tag do contexto (ex.: `group by function task.tags.find(t => t.startsWith('#projeto/')) ?? '(sem contexto)'`), garantindo que cada tarefa apareça em um único grupo mesmo com múltiplas tags.
 2. **`## Tarefas pendentes tipo notas`** — Dataview `LIST` + `SORT`; lista plana de wikilinks para notas com `tipo = "tarefa" AND status = "pendente"` no escopo do contexto. Sem `GROUP BY` — cada item é um link clicável direto ao nome da nota.
+
+**Exclusão padrão.** Todas as queries (Tasks e Dataview) excluem notas em `00_SISTEMA/00_DOCUMENTACOES/` e `00_SISTEMA/01_TEMPLATES/`.
 
 `MOC-home.md` e `MOC-calendario.md` usam `group by tags` na seção Tasks — agrupam por todas as tags, incluindo tarefas sem tag de contexto.
 
@@ -361,6 +364,10 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 - **2026-05-13** — desdobramento do campo `repo` em `repo_local` + `repo_git` no frontmatter do `_PROJETO.md` (§4) e nova entrada em §10. Convenção propagada para template, script de migração, script de arquivamento e notas existentes. Auditoria de privacidade: convenção descreve apenas o nome e a semântica dos campos; valores concretos (paths e URLs) permanecem em notas privadas.
 - **2026-05-13** — particionamento `YYYY/MM/<nota>` documentado como convenção genérica em §3 e nova entrada em §10; nota acrescentada em §8.5 sobre MOCs herdados em pastas de legado; entrada de 2026-05-11 no changelog reescrita para refletir a adoção pontual de `area/<slug>` em VAULT. Auditoria de privacidade: convenções estruturais; texto evita citar nomes concretos da subpasta de integração de saúde, em coerência com §6 e §8.5.
 - **2026-05-15** — §4: `pendente` adicionado ao enum `status`; nota sobre tag de contexto obrigatória em tarefas inline dentro de `20_PROJETOS/` e `30_AREAS/`. §8: famílias `area/{slug}`, `recurso/{slug}` e `inbox` formalizadas; regra de obrigatoriedade de tag em tarefas. §8.5: padrão de duas seções e `group by function` documentados; distinção entre Tasks (group by function) e Dataview (LIST+SORT, lista plana de links). §10: decisão de 2026-05-15 registrada.
+- **2026-05-15** — `30_AREAS/CARREIRA/` materializada como área contínua de desenvolvimento profissional: `MOC-carreira.md` criado com subpastas `sessoes/`, `decisoes/`, `tarefas/` e `pesquisas/`; `30_AREAS/MOC-areas.md` atualizado com link direto ao hub; exemplos de hub de área expandidos em §8.5.
+- **2026-05-15** — `30_AREAS/FINANCAS/` materializada como área contínua de planejamento financeiro: `MOC-financas.md` criado com subpastas `sessoes/`, `decisoes/`, `tarefas/` e `pesquisas/` (além da existente `controles/`); `30_AREAS/MOC-areas.md` atualizado com link direto ao hub; exemplos de hub de área expandidos em §8.5.
+- **2026-05-15** — Subpastas de `30_AREAS/FINANCAS/controles/` renomeadas para caixa baixa seguindo convenção do vault; referências atualizadas em `MOC-financas.md`, `_PROJETO.md` do projeto `06_financeiro-gsheet` e nota de tarefa de normalização de metadados.
+- **2026-05-15** — §2: `30_AREAS/FAMILIA/`, `/GARAGEM/`, `/TRABALHO/` e `40_RECURSOS/TI/` marcadas como placeholders intencionais (diretórios vazios). §7: plugin Obsidian Bases adicionado à tabela de integrações. §8.5: regra de exclusão de `00_SISTEMA/00_DOCUMENTACOES/` e `00_SISTEMA/01_TEMPLATES/` das queries Tasks e Dataview documentada.
 
 ---
 
