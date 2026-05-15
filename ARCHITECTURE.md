@@ -111,7 +111,7 @@ data_atualizacao: 2025-03-14 09:30
 tipo: daily | weekly | monthly | yearly | projeto | sessao | sessao-vault |
       decisao | pesquisa | tarefa | saude | analise-saude | legado |
       webclipper | moc | documentacao
-status: ideia | planejamento | execucao | revisar | concluido | arquivado
+status: ideia | pendente | planejamento | execucao | revisar | concluido | arquivado
 tags: []
 ---
 ```
@@ -120,9 +120,9 @@ tags: []
 
 - **Daily:** acrescenta `dia_semana`.
 - **Sessão de projeto:** acrescenta `hora`, `session_id`, `branch`, `mensagens`, `projeto: <slug>`.
-- **Notas dentro de `20_PROJETOS/...`:** **obrigatoriamente** `projeto: <slug>` no frontmatter. Slug = nome da pasta mais profunda do projeto. Tarefas inline (checkbox) usam as tags `#projeto/<slug>` + `#tipo/tarefa`.
+- **Notas dentro de `20_PROJETOS/...`:** **obrigatoriamente** `projeto: <slug>` no frontmatter. Slug = nome da pasta mais profunda do projeto. Tarefas inline (checkbox) usam as tags `#projeto/<slug>` + `#tipo/tarefa`. A tag `#projeto/<slug>` é obrigatória em toda tarefa inline, inclusive quando a tarefa já está dentro do path natural do projeto — requisito do `group by function` nas queries de MOC.
 - **Arquivo-índice `_PROJETO.md`:** além dos campos comuns, carrega `repo_local` (caminho absoluto do repositório no FS local) e `repo_git` (URL HTTPS do remote git, vazia quando não houver `.git` ou remote configurado). Projetos só-vault podem ter ambos vazios.
-- **Notas dentro de `30_AREAS/...`:** **obrigatoriamente** `area: <slug>` no frontmatter. Slug = nome da subpasta de área em minúsculas (ex.: `area: saude`, `area: vault`). Regra simétrica à de `projeto: <slug>`; aplica-se a notas operacionais (tarefas, decisões, pesquisas) dentro da área. MOCs e sub-MOCs auto-gerados ficam isentos.
+- **Notas dentro de `30_AREAS/...`:** **obrigatoriamente** `area: <slug>` no frontmatter. Slug = nome da subpasta de área em minúsculas (ex.: `area: saude`, `area: vault`). Regra simétrica à de `projeto: <slug>`; aplica-se a notas operacionais (tarefas, decisões, pesquisas) dentro da área. Tarefas inline dentro de `30_AREAS/` usam `#area/<slug>` — mesma obrigatoriedade da regra de `20_PROJETOS/`. MOCs e sub-MOCs auto-gerados ficam isentos.
 - **Pesquisa:** acrescenta `notebook_id`, `fontes`.
 - **Saúde:** notas da área de saúde possuem campos numéricos para acompanhamento longitudinal (métricas físicas, sinais vitais, atividade). Os campos específicos não aparecem nesta documentação por convenção de privacidade.
 
@@ -260,8 +260,13 @@ Credenciais, tokens, hosts e endpoints internos **não** aparecem nesta document
   - `status/{...}` — espelha o frontmatter `status`
   - `ti/{python, obsidian, ...}`
   - `pessoa/{...}`, `entidade/{...}`
-  - `projeto/{slug}`
+  - `projeto/{slug}` — contexto de projeto (obrigatório em toda tarefa, mesmo dentro do path do projeto)
+  - `area/{slug}` — contexto de área contínua (obrigatório em tarefas dentro de `30_AREAS/`)
+  - `recurso/{slug}` — contexto de recurso em `40_RECURSOS/`
+  - `inbox` — tarefa em transição sem contexto definido
 - Tags servem para filtragem visual; valores únicos por nota ficam no **frontmatter**, sem duplicação.
+
+**Tags de contexto obrigatórias em tarefas.** Toda tarefa (inline ou nota `tipo: tarefa`) nos contextos `20_PROJETOS/`, `30_AREAS/` e `40_RECURSOS/` deve carregar a tag de contexto correspondente (`#projeto/<slug>`, `#area/<slug>` ou `#recurso/<slug>`). Requisito do `group by function` nas queries de MOC — tarefas sem tag de contexto caem no grupo `(sem contexto)` em vez do agrupamento correto.
 
 **Convenção interna por hub.** Áreas com muitas subdivisões podem usar uma família de tag local fora das oficiais — o caso atual é `saude/<subarea>` (notas em `30_AREAS/SAUDE/METRICAS/`), com subáreas como `diario`, `sono`, `treino`, `peso`, `pressao`, `glicose`, `analise`. Funciona como recorte visual; queries quantitativas se apoiam em `tipo` + path scope, não em tag.
 
@@ -282,6 +287,13 @@ Cada pasta de primeiro nível possui um arquivo-índice `MOC-<nome>.md` na sua r
 | `99_INBOX/MOC-inbox.md`            | Resumo, tarefas de triagem e instruções de fluxo           |
 
 Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exemplos vigentes: `30_AREAS/SAUDE/MOC-saude.md` (com sub-MOCs auto-gerados `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`); `30_AREAS/VAULT/MOC-vault.md` (hub de meta-manutenção do vault, com queries para tarefas/decisões/pesquisas internas e listagem das sessões de manutenção em `30_AREAS/VAULT/sessoes/`). A estrutura interna de subpastas fica livre por área — cada uma organiza conforme a natureza do conteúdo (subáreas temáticas em SAUDE; subpastas por tipo de nota em VAULT, incluindo `sessoes/` própria da área). Pastas em `40_RECURSOS/LEGADO/` provenientes de importação de outros sistemas podem manter MOCs próprios herdados da estrutura original, sem necessariamente seguir o padrão de hub de área.
+
+**Padrão de duas seções em MOCs.** Todo MOC e `_PROJETO.md` dos contextos `20_PROJETOS/`, `30_AREAS/` e `40_RECURSOS/` segue um padrão de duas seções de tarefas:
+
+1. **`## Tarefas pendentes`** — plugin Tasks; filtra `not done` por path + tag de contexto. MOCs de contexto específico usam `group by function` para agrupar tarefas pela família de tag do contexto (ex.: `group by function task.tags.find(t => t.startsWith('#projeto/')) ?? '(sem contexto)'`), garantindo que cada tarefa apareça em um único grupo mesmo com múltiplas tags.
+2. **`## Tarefas pendentes tipo notas`** — Dataview `LIST` + `SORT`; lista plana de wikilinks para notas com `tipo = "tarefa" AND status = "pendente"` no escopo do contexto. Sem `GROUP BY` — cada item é um link clicável direto ao nome da nota.
+
+`MOC-home.md` e `MOC-calendario.md` usam `group by tags` na seção Tasks — agrupam por todas as tags, incluindo tarefas sem tag de contexto.
 
 ---
 
@@ -336,6 +348,7 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 | 2026-05-11 | Sessões de manutenção do vault migradas de `10_CALENDARIO/01_DAILY/sessoes-vault/` para `30_AREAS/VAULT/sessoes/`, com `area: vault` normalizado em todas as sessões existentes | Coerência com o modelo de área contínua: tudo ligado à governança do vault concentra-se no mesmo hub, simétrico a `20_PROJETOS/<slug>/sessoes/` |
 | 2026-05-13 | Campo `repo` no `_PROJETO.md` desdobrado em dois: `repo_local` (caminho absoluto no FS) e `repo_git` (URL HTTPS do remote git, vazia se não houver) | Semântica explícita habilita automações futuras (abrir no GitHub, validar remote, sincronizar status de PR) sem ambiguidade entre path local e URL remota |
 | 2026-05-13 | Particionamento `YYYY/MM/<nota>` formalizado como convenção genérica para subpastas de área com alta cardinalidade diária | Espelha o agrupamento do calendário; evita diretórios planos; receita de migração já validada em três subpastas distintas (DIARIO, SONO, TREINOS na área de saúde) |
+| 2026-05-15 | Tags de contexto (`projeto/`, `area/`, `recurso/`) obrigatórias em toda tarefa inline e nota `tipo: tarefa`; padrão de duas seções (`## Tarefas pendentes` Tasks + `## Tarefas pendentes tipo notas` Dataview) em todo MOC e `_PROJETO.md`; `group by function` em MOCs de contexto; `pendente` como default em `TAREFA.md` | Garantia de agrupamento consistente no `group by function`; tarefas sem tag ficavam no grupo `(sem contexto)` em vez do contexto correto |
 
 ---
 
@@ -347,6 +360,7 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 - **2026-05-11** — sessões de manutenção do vault movidas de `10_CALENDARIO/01_DAILY/sessoes-vault/` para `30_AREAS/VAULT/sessoes/` (§3, §8.5) e nova entrada em §10 registrando a mudança. Frontmatter de todas as sessões existentes normalizado com `area: vault`. Auditoria de privacidade: mudança puramente estrutural — sem PII, sem credenciais, sem caminhos sensíveis novos.
 - **2026-05-13** — desdobramento do campo `repo` em `repo_local` + `repo_git` no frontmatter do `_PROJETO.md` (§4) e nova entrada em §10. Convenção propagada para template, script de migração, script de arquivamento e notas existentes. Auditoria de privacidade: convenção descreve apenas o nome e a semântica dos campos; valores concretos (paths e URLs) permanecem em notas privadas.
 - **2026-05-13** — particionamento `YYYY/MM/<nota>` documentado como convenção genérica em §3 e nova entrada em §10; nota acrescentada em §8.5 sobre MOCs herdados em pastas de legado; entrada de 2026-05-11 no changelog reescrita para refletir a adoção pontual de `area/<slug>` em VAULT. Auditoria de privacidade: convenções estruturais; texto evita citar nomes concretos da subpasta de integração de saúde, em coerência com §6 e §8.5.
+- **2026-05-15** — §4: `pendente` adicionado ao enum `status`; nota sobre tag de contexto obrigatória em tarefas inline dentro de `20_PROJETOS/` e `30_AREAS/`. §8: famílias `area/{slug}`, `recurso/{slug}` e `inbox` formalizadas; regra de obrigatoriedade de tag em tarefas. §8.5: padrão de duas seções e `group by function` documentados; distinção entre Tasks (group by function) e Dataview (LIST+SORT, lista plana de links). §10: decisão de 2026-05-15 registrada.
 
 ---
 
