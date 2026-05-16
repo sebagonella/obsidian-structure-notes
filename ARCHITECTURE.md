@@ -48,6 +48,7 @@ vault/
 │   ├── FAMILIA/                           # contexto familiar (placeholder — dir vazio)
 │   ├── FINANCAS/                          # planejamento financeiro
 │   ├── GARAGEM/                           # manutenção de bens duráveis (placeholder — dir vazio)
+│   ├── HOME/                              # manutenção, reparos e organização da casa
 │   ├── SAUDE/                             # métricas, exames, rotinas, análises
 │   ├── TRABALHO/                          # responsabilidades contínuas do trabalho (placeholder — dir vazio)
 │   └── VAULT/                             # meta-manutenção do vault (sessões, tarefas, decisões, pesquisas)
@@ -287,7 +288,7 @@ Cada pasta de primeiro nível possui um arquivo-índice `MOC-<nome>.md` na sua r
 | `40_RECURSOS/MOC-recursos.md`      | Biblioteca/Zettelkasten                                    |
 | `99_INBOX/MOC-inbox.md`            | Resumo, tarefas de triagem e instruções de fluxo           |
 
-Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exemplos vigentes: `30_AREAS/SAUDE/MOC-saude.md` (com sub-MOCs auto-gerados `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`); `30_AREAS/VAULT/MOC-vault.md` (hub de meta-manutenção do vault, com queries para tarefas/decisões/pesquisas internas e listagem das sessões de manutenção em `30_AREAS/VAULT/sessoes/`); `30_AREAS/CARREIRA/MOC-carreira.md` (hub de desenvolvimento profissional, com queries para tarefas/decisões/pesquisas e sessões em `30_AREAS/CARREIRA/sessoes/`); `30_AREAS/FINANCAS/MOC-financas.md` (hub de planejamento financeiro, com queries para tarefas/decisões/pesquisas e sessões em `30_AREAS/FINANCAS/sessoes/`). A estrutura interna de subpastas fica livre por área — cada uma organiza conforme a natureza do conteúdo (subáreas temáticas em SAUDE; subpastas por tipo de nota em VAULT, CARREIRA e FINANCAS, incluindo `sessoes/` própria de cada área). Pastas em `40_RECURSOS/LEGADO/` provenientes de importação de outros sistemas podem manter MOCs próprios herdados da estrutura original, sem necessariamente seguir o padrão de hub de área.
+Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exemplos vigentes: `30_AREAS/SAUDE/MOC-saude.md` (com sub-MOCs auto-gerados `_DASHBOARD.md` e `_INDICE.md` na subpasta de integração de `METRICAS/`); `30_AREAS/VAULT/MOC-vault.md` (hub de meta-manutenção do vault, com queries para tarefas/decisões/pesquisas internas e listagem das sessões de manutenção em `30_AREAS/VAULT/sessoes/`); `30_AREAS/CARREIRA/MOC-carreira.md` (hub de desenvolvimento profissional, com queries para tarefas/decisões/pesquisas e sessões em `30_AREAS/CARREIRA/sessoes/`); `30_AREAS/FINANCAS/MOC-financas.md` (hub de planejamento financeiro, com queries para tarefas/decisões/pesquisas e sessões em `30_AREAS/FINANCAS/sessoes/`); `30_AREAS/HOME/MOC-home.md` (hub de manutenção, reparos e organização da casa, com subpasta `tarefas/` para notas de tarefa e queries Tasks/Dataview por tag `#area/home`). A estrutura interna de subpastas fica livre por área — cada uma organiza conforme a natureza do conteúdo (subáreas temáticas em SAUDE; subpastas por tipo de nota em VAULT, CARREIRA e FINANCAS, incluindo `sessoes/` própria de cada área). Pastas em `40_RECURSOS/LEGADO/` provenientes de importação de outros sistemas podem manter MOCs próprios herdados da estrutura original, sem necessariamente seguir o padrão de hub de área.
 
 **Padrão de duas seções em MOCs.** Todo MOC e `_PROJETO.md` dos contextos `20_PROJETOS/`, `30_AREAS/` e `40_RECURSOS/` segue um padrão de duas seções de tarefas:
 
@@ -352,6 +353,7 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 | 2026-05-13 | Campo `repo` no `_PROJETO.md` desdobrado em dois: `repo_local` (caminho absoluto no FS) e `repo_git` (URL HTTPS do remote git, vazia se não houver) | Semântica explícita habilita automações futuras (abrir no GitHub, validar remote, sincronizar status de PR) sem ambiguidade entre path local e URL remota |
 | 2026-05-13 | Particionamento `YYYY/MM/<nota>` formalizado como convenção genérica para subpastas de área com alta cardinalidade diária | Espelha o agrupamento do calendário; evita diretórios planos; receita de migração já validada em três subpastas distintas (DIARIO, SONO, TREINOS na área de saúde) |
 | 2026-05-15 | Tags de contexto (`projeto/`, `area/`, `recurso/`) obrigatórias em toda tarefa inline e nota `tipo: tarefa`; padrão de duas seções (`## Tarefas pendentes` Tasks + `## Tarefas pendentes tipo notas` Dataview) em todo MOC e `_PROJETO.md`; `group by function` em MOCs de contexto; `pendente` como default em `TAREFA.md` | Garantia de agrupamento consistente no `group by function`; tarefas sem tag ficavam no grupo `(sem contexto)` em vez do contexto correto |
+| 2026-05-16 | `30_AREAS/HOME/` criada como área contínua de manutenção, reparos e organização da casa | Área de responsabilidade sem data de fim; estrutura mínima com `MOC-home.md` + `tarefas/` segue o padrão de hub de área estabelecido |
 
 ---
 
@@ -368,6 +370,7 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 - **2026-05-15** — `30_AREAS/FINANCAS/` materializada como área contínua de planejamento financeiro: `MOC-financas.md` criado com subpastas `sessoes/`, `decisoes/`, `tarefas/` e `pesquisas/` (além da existente `controles/`); `30_AREAS/MOC-areas.md` atualizado com link direto ao hub; exemplos de hub de área expandidos em §8.5.
 - **2026-05-15** — Subpastas de `30_AREAS/FINANCAS/controles/` renomeadas para caixa baixa seguindo convenção do vault; referências atualizadas em `MOC-financas.md`, `_PROJETO.md` do projeto `06_financeiro-gsheet` e nota de tarefa de normalização de metadados.
 - **2026-05-15** — §2: `30_AREAS/FAMILIA/`, `/GARAGEM/`, `/TRABALHO/` e `40_RECURSOS/TI/` marcadas como placeholders intencionais (diretórios vazios). §7: plugin Obsidian Bases adicionado à tabela de integrações. §8.5: regra de exclusão de `00_SISTEMA/00_DOCUMENTACOES/` e `00_SISTEMA/01_TEMPLATES/` das queries Tasks e Dataview documentada.
+- **2026-05-16** — `30_AREAS/HOME/` materializada como área contínua de manutenção e reparos da casa: `MOC-home.md` criado com subpasta `tarefas/`; `30_AREAS/MOC-areas.md` atualizado com link direto ao hub. §2 (árvore de `30_AREAS/`) e §8.5 (exemplos de hub de área) atualizados; nova decisão em §10.
 
 ---
 
