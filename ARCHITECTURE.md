@@ -45,7 +45,8 @@ vault/
 │   └── ARQUIVADOS/<categoria>/<YYYY>/<slug>/
 ├── 30_AREAS/                              # responsabilidades contínuas (sem data de fim)
 │   ├── CARREIRA/                          # desenvolvimento profissional contínuo
-│   ├── FAMILIA/                           # contexto familiar (placeholder — dir vazio)
+│   │   └── CONCURSOS/                     # preparação para concursos (convenção de nomes própria — §3)
+│   ├── FAMILIA/                           # contexto familiar; subpasta por pessoa (conteúdo de terceiros — sempre privado)
 │   ├── FINANCAS/                          # planejamento financeiro
 │   ├── GARAGEM/                           # manutenção de bens duráveis (placeholder — dir vazio)
 │   ├── HOME/                              # manutenção, reparos e organização da casa
@@ -54,9 +55,11 @@ vault/
 │   └── VAULT/                             # meta-manutenção do vault (sessões, tarefas, decisões, pesquisas)
 ├── 40_RECURSOS/                           # referências, biblioteca, material durável
 │   ├── LEGADO/                            # destino de importações de outros sistemas
-│   └── TI/                                # referências técnicas (placeholder — dir vazio)
+│   ├── LIVROS/                            # biblioteca de PDFs, subpastas por matéria
+│   └── TI/                                # referências técnicas
 ├── 99_INBOX/                              # captura crua, antes da triagem
-├── MOC-home.md                            # índice geral do vault
+├── MOC-inicio.md                          # índice geral do vault
+├── BASE-home.base                         # base do plugin Bases (§7)
 └── .claude/                               # commands, skills locais e subagents do Claude Code
 ```
 
@@ -76,7 +79,9 @@ vault/
 
 Padrão `NN_NOME` em caixa alta com underscore para o primeiro nível (`00_SISTEMA`, `10_CALENDARIO`, `20_PROJETOS`, `30_AREAS`, `40_RECURSOS`, `99_INBOX`). Subpastas dentro de cada categoria também seguem o padrão `NN_NOME`. Pastas de projeto usam `NN_slug-em-kebab-case` dentro de `20_PROJETOS/<categoria>/`.
 
-**Subdiretórios estruturais — UPPERCASE obrigatório.** Todos os subdiretórios dentro de `00_SISTEMA`, `10_CALENDARIO`, `20_PROJETOS`, `30_AREAS`, `40_RECURSOS` e `99_INBOX` devem ser criados em caixa alta, com duas exceções: (1) slugs de projeto (ex.: `03_home-lab`) permanecem lowercase, pois são usados como tags e no campo `projeto:` do frontmatter — convenção de tags exige lowercase; (2) `40_RECURSOS/LEGADO/` e seus subdiretórios são isentos (conteúdo histórico importado). Subdiretórios estruturais típicos: `SESSOES/`, `DECISOES/`, `TAREFAS/`, `PESQUISAS/`, `CONTROLES/`, `REALOCACAO/`.
+**Subdiretórios estruturais — UPPERCASE obrigatório.** Todos os subdiretórios dentro de `00_SISTEMA`, `10_CALENDARIO`, `20_PROJETOS`, `30_AREAS`, `40_RECURSOS` e `99_INBOX` devem ser criados em caixa alta, com duas exceções: (1) slugs de projeto (ex.: `03_home-lab`) permanecem lowercase, pois são usados como tags e no campo `projeto:` do frontmatter — convenção de tags exige lowercase; (2) `40_RECURSOS/LEGADO/` e seus subdiretórios são isentos (conteúdo histórico importado). Subdiretórios estruturais típicos: `SESSOES/`, `DECISOES/`, `TAREFAS/`, `PESQUISAS/`, `DOCUMENTACOES/`, `AUDITORIAS/`, `CONTROLES/`, `REALOCACAO/`.
+
+**Exceção — árvore de concursos.** `30_AREAS/CARREIRA/CONCURSOS/<ORGAO>_<ANO>[_PREVISTO]/` segue convenção própria, mantida por automação externa ao vault: estágios numerados em `NN-NOME` (hífen, não underscore), pastas especiais com prefixo `_` para conteúdo compartilhado entre cargos, sufixo `_PREVISTO` quando ainda não há edital publicado, e subpastas de conteúdo em lowercase. A regra UPPERCASE não se aplica nesse subtree — normalizá-lo à mão quebra a automação que mantém a árvore.
 
 ### Notas periódicas
 
@@ -113,7 +118,7 @@ data: 2025-03-14
 data_atualizacao: 2025-03-14 09:30
 tipo: daily | weekly | monthly | yearly | projeto | sessao | sessao-vault |
       decisao | pesquisa | tarefa | saude | analise-saude | legado |
-      webclipper | moc | documentacao
+      webclipper | moc | documentacao | auditoria
 status: ideia | pendente | planejamento | execucao | revisar | concluido | arquivado
 tags: []
 ---
@@ -124,7 +129,7 @@ tags: []
 - **Daily:** acrescenta `dia_semana`.
 - **Sessão de projeto:** acrescenta `hora`, `session_id`, `branch`, `mensagens`, `projeto: <slug>`.
 - **Notas dentro de `20_PROJETOS/...`:** **obrigatoriamente** `projeto: <slug>` no frontmatter. Slug = nome da pasta mais profunda do projeto. Tarefas inline (checkbox) usam as tags `#projeto/<slug>` + `#tipo/tarefa`. A tag `#projeto/<slug>` é obrigatória em toda tarefa inline, inclusive quando a tarefa já está dentro do path natural do projeto — requisito do `group by function` nas queries de MOC.
-- **Arquivo-índice `_PROJETO.md`:** além dos campos comuns, carrega `repo_local` (caminho absoluto do repositório no FS local) e `repo_git` (URL HTTPS do remote git, vazia quando não houver `.git` ou remote configurado). Projetos só-vault podem ter ambos vazios.
+- **Arquivo-índice `_PROJETO.md`:** além dos campos comuns, carrega `repo_local` (caminho absoluto do repositório no FS local), `repo_git` (URL HTTPS do remote git, vazia quando não houver `.git` ou remote configurado), `claude_context` (caminho do `.claude/CLAUDE.md` do repositório) e `aliases: [<slug>]`. Projetos só-vault podem ter os três primeiros vazios. O alias é o que permite referenciar o hub como `[[<slug>]]` a partir de qualquer nota do projeto — é o mecanismo que liga sessões, decisões e tarefas ao hub sem caminho absoluto; um hub sem alias deixa todos esses links sem resolver. Emitido pelo template desde 2026-08-12.
 - **Notas dentro de `30_AREAS/...`:** **obrigatoriamente** `area: <slug>` no frontmatter. Slug = nome da subpasta de área em minúsculas (ex.: `area: saude`, `area: vault`). Regra simétrica à de `projeto: <slug>`; aplica-se a notas operacionais (tarefas, decisões, pesquisas) dentro da área. Tarefas inline dentro de `30_AREAS/` usam `#area/<slug>` — mesma obrigatoriedade da regra de `20_PROJETOS/`. MOCs e sub-MOCs auto-gerados ficam isentos.
 - **Pesquisa:** acrescenta `notebook_id`, `fontes`.
 - **Saúde:** notas da área de saúde possuem campos numéricos para acompanhamento longitudinal (métricas físicas, sinais vitais, atividade). Os campos específicos não aparecem nesta documentação por convenção de privacidade.
@@ -212,6 +217,8 @@ Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECU
 | `DECISAO.md`                   | `decisao`        | ADR — decisão arquitetural com alternativas e consequências |
 | `PESQUISA.md`                  | `pesquisa`       | Resultado consolidado de pesquisa externa                   |
 | `TAREFA.md`                    | `tarefa`         | Tarefa-nota com prazo e critério de pronto                  |
+| `DOCUMENTACAO.md`              | `documentacao`   | Documento de referência vivo de um projeto                  |
+| `AUDITORIA.md`                 | `auditoria`      | Revisão pontual / snapshot de estado                        |
 | `SAUDE-DIARIO.md`              | `saude`          | Métricas e relato diário da área de saúde                   |
 | `LEGADO.md`                    | `legado`         | Stub para conteúdo importado de outro sistema               |
 | `MOC_PROJETO_GERAL.md`         | `moc`            | Mapa geral de projetos por contexto                         |
@@ -221,6 +228,10 @@ Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECU
 **Convenção — dois mecanismos.** Templater (`<% %>`) é resolvido pelo Obsidian na criação manual da nota, e é o único mecanismo nos templates de MOC e no modelo de `.claude/CLAUDE.md`. Placeholders `{{VARIAVEL}}` são resolvidos por um carregador embutido nos scripts e são **obrigatórios** em todo template consumido por automação — migrá-los para Templater quebraria a geração, já que os scripts não executam Templater. Os dois convivem no mesmo arquivo: o carregador também resolve as expressões de data mais comuns do Templater.
 
 **Placeholders no frontmatter exigem aspas.** No frontmatter, todo placeholder vai citado (`campo: "{{VARIAVEL}}"`); no corpo da nota, sem aspas. Sem as aspas, `campo: {{VARIAVEL}}` é YAML ambíguo — o parser interpreta como um mapping cuja chave é outro mapping, e qualquer ferramenta que re-serialize o frontmatter corrompe o template em silêncio. O carregador consome as aspas ao substituir, preservando o tipo nativo do valor (campo numérico continua numérico na nota gerada); placeholder sem valor permanece literal e emite aviso, e as aspas garantem que o frontmatter siga válido mesmo nesse caso.
+
+**Templates project-scoped injetam contexto.** `PROJETO`, `SESSAO-PROJETO`, `DECISAO`, `PESQUISA`, `TAREFA`, `DOCUMENTACAO` e `AUDITORIA` emitem, além do campo `projeto: <slug>`, a tag de contexto `projeto/<slug>` em `tags:` e a linha `> **Projeto:** [[<slug>]]` no corpo. A tag garante o agrupamento nas queries de MOC; a linha no corpo liga a nota ao hub e a mantém fora do conjunto de notas órfãs no grafo.
+
+**Tag de contexto derivada da categoria.** A tag `contexto/<valor>` dos templates de projeto é resolvida a partir da categoria da pasta (`PESSOAL` → `contexto/pessoal`, `PROFISSIONAL` → `contexto/profissional`), não fixada no template. Categoria não reconhecida cai em `profissional` com aviso explícito.
 
 **Princípio:** templates são a **fonte da verdade do frontmatter**. Mudanças de convenção alteram o template antes das notas existentes.
 
@@ -238,7 +249,7 @@ Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECU
 | Obsidian — Templater                      | Engine de templates                                                    |
 | Obsidian — Dataview                       | Queries em MOCs e listas dinâmicas                                     |
 | Obsidian — Tasks                          | Indexação de tarefas inline                                            |
-| Obsidian — Bases                          | Banco de dados de projetos; `BASE-projetos.base` indexa e filtra `_PROJETO.md` em `20_PROJETOS/` |
+| Obsidian — Bases                          | Banco de dados de notas; `BASE-home.base` (raiz) indexa notas de `20_PROJETOS/` agrupadas por `projeto`, excluindo templates e arquivados |
 | Obsidian — Tracker                        | Gráficos longitudinais a partir de frontmatter                         |
 | Obsidian — Contribution Graph             | Heatmaps anuais (consistência de hábitos, contagem por dia)            |
 | Obsidian — Linter                         | Mantém `data_atualizacao` consistente                                  |
@@ -272,7 +283,7 @@ Credenciais, tokens, hosts e endpoints internos **não** aparecem nesta document
   - `inbox` — tarefa em transição sem contexto definido
 - Tags servem para filtragem visual; valores únicos por nota ficam no **frontmatter**, sem duplicação.
 
-**Tags de contexto obrigatórias em tarefas.** Toda tarefa (inline ou nota `tipo: tarefa`) nos contextos `20_PROJETOS/`, `30_AREAS/` e `40_RECURSOS/` deve carregar a tag de contexto correspondente (`#projeto/<slug>`, `#area/<slug>` ou `#recurso/<slug>`). Requisito do `group by function` nas queries de MOC — tarefas sem tag de contexto caem no grupo `(sem contexto)` em vez do agrupamento correto.
+**Tags de contexto obrigatórias.** Toda **nota** criada ou editada em `20_PROJETOS/`, `30_AREAS/` ou `40_RECURSOS/` deve carregar a tag de contexto correspondente (`projeto/<slug>`, `area/<slug>` ou `recurso/<slug>`) no frontmatter, **e** toda tarefa inline deve repeti-la na própria linha (`#projeto/<slug>` etc.). Requisito do `group by function` nas queries de MOC — sem a tag, a nota ou tarefa cai no grupo `(sem contexto)` em vez do agrupamento correto, mesmo estando no path certo. Notas em `40_RECURSOS/LEGADO/` são isentas. Os templates emitem a tag automaticamente; notas criadas fora deles precisam da tag manual.
 
 **Convenção interna por hub.** Áreas com muitas subdivisões podem usar uma família de tag local fora das oficiais — o caso atual é `saude/<subarea>` (notas em `30_AREAS/SAUDE/METRICAS/`), com subáreas como `diario`, `sono`, `treino`, `peso`, `pressao`, `glicose`, `analise`. Funciona como recorte visual; queries quantitativas se apoiam em `tipo` + path scope, não em tag.
 
@@ -280,11 +291,11 @@ Credenciais, tokens, hosts e endpoints internos **não** aparecem nesta document
 
 ## 8.5 MOCs
 
-Cada pasta de primeiro nível possui um arquivo-índice `MOC-<nome>.md` na sua raiz, e um `MOC-home.md` global vive na raiz do vault. Os MOCs concentram navegação, queries Dataview/Tasks e seções manuais.
+Cada pasta de primeiro nível possui um arquivo-índice `MOC-<nome>.md` na sua raiz, e um `MOC-inicio.md` global vive na raiz do vault. Os MOCs concentram navegação, queries Dataview/Tasks e seções manuais.
 
 | MOC                                | Papel                                                      |
 |------------------------------------|------------------------------------------------------------|
-| `MOC-home.md` (raiz)               | Navegação geral entre os hubs de 1º nível                  |
+| `MOC-inicio.md` (raiz)             | Navegação geral entre os hubs de 1º nível                  |
 | `00_SISTEMA/MOC-sistema.md`        | Navegação dos meta-recursos (templates, scripts, docs)     |
 | `10_CALENDARIO/MOC-calendario.md`  | Atalhos para dailies/weeklies/monthlies/yearlies recentes  |
 | `20_PROJETOS/MOC-projetos.md`      | Projetos por contexto e status                             |
@@ -301,7 +312,9 @@ Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exempl
 
 **Exclusão padrão.** Todas as queries (Tasks e Dataview) excluem notas em `00_SISTEMA/00_DOCUMENTACOES/` e `00_SISTEMA/01_TEMPLATES/`.
 
-`MOC-home.md` e `MOC-calendario.md` usam `group by tags` na seção Tasks — agrupam por todas as tags, incluindo tarefas sem tag de contexto.
+`MOC-inicio.md` e `MOC-calendario.md` usam `group by tags` na seção Tasks — agrupam por todas as tags, incluindo tarefas sem tag de contexto.
+
+**Nome do índice raiz.** O índice geral da raiz chama-se `MOC-inicio.md`. O nome `MOC-home` fica reservado ao hub da área casa (`30_AREAS/HOME/MOC-home.md`), que o deriva da convenção `MOC-<slug-da-área>`. Os dois coexistiam com o mesmo nome até 2026-08-12, tornando `[[MOC-home]]` ambíguo — o Obsidian resolvia por proximidade, e links de área podiam cair no índice geral.
 
 ---
 
@@ -360,6 +373,10 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 | 2026-05-16 | `30_AREAS/HOME/` criada como área contínua de manutenção, reparos e organização da casa | Área de responsabilidade sem data de fim; estrutura mínima com `MOC-home.md` + `TAREFAS/` segue o padrão de hub de área estabelecido |
 | 2026-05-17 | Subdiretórios estruturais padronizados para UPPERCASE em todo o vault (`SESSOES/`, `DECISOES/`, `TAREFAS/`, `PESQUISAS/`, `CONTROLES/`, `REALOCACAO/`); exceções: slugs de projeto (lowercase para compatibilidade com tags e campo `projeto:`) e `40_RECURSOS/LEGADO/` (conteúdo histórico isento) | Uniformidade na navegação; slugs de projeto permanecem lowercase por serem usados como tags e valores de frontmatter |
 | 2026-07-21 | Placeholders `{{VARIAVEL}}` sempre entre aspas no frontmatter dos templates; `{{VARIAVEL}}` mantido (não migrado para Templater) em todo template consumido por script | `campo: {{VAR}}` é YAML ambíguo e era corrompido por qualquer round-trip de parser, quebrando a geração de notas em silêncio; as aspas tornam o template válido em repouso sem custo de tipo |
+| 2026-08-12 | Índice geral da raiz renomeado de `MOC-home.md` para `MOC-inicio.md`; `MOC-home` reservado ao hub da área casa | Dois arquivos homônimos tornavam `[[MOC-home]]` ambíguo; o nome do hub de área é derivado da convenção `MOC-<slug>`, o da raiz não |
+| 2026-08-12 | Tag de contexto obrigatória em toda nota dos contextos, não apenas em tarefas; templates project-scoped passam a emiti-la | Sem a tag, a nota some das queries `group by` do MOC mesmo estando no path correto |
+| 2026-08-12 | Tag `contexto/<valor>` derivada da categoria do projeto em vez de fixa no template | O valor fixo `profissional` marcava incorretamente notas de projetos pessoais |
+| 2026-08-12 | `aliases: [<slug>]` emitido pelo template `PROJETO.md` | O alias é o alvo de `[[<slug>]]`; hubs criados sem ele deixavam todos os links internos do projeto sem resolver |
 
 ---
 
@@ -378,6 +395,7 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 - **2026-05-15** — §2: `30_AREAS/FAMILIA/`, `/GARAGEM/`, `/TRABALHO/` e `40_RECURSOS/TI/` marcadas como placeholders intencionais (diretórios vazios). §7: plugin Obsidian Bases adicionado à tabela de integrações. §8.5: regra de exclusão de `00_SISTEMA/00_DOCUMENTACOES/` e `00_SISTEMA/01_TEMPLATES/` das queries Tasks e Dataview documentada.
 - **2026-05-16** — `30_AREAS/HOME/` materializada como área contínua de manutenção e reparos da casa: `MOC-home.md` criado com subpasta `TAREFAS/`; `30_AREAS/MOC-areas.md` atualizado com link direto ao hub. §2 (árvore de `30_AREAS/`) e §8.5 (exemplos de hub de área) atualizados; nova decisão em §10.
 - **2026-05-17** — §3: regra UPPERCASE obrigatório para subdiretórios estruturais documentada, com exceções (slugs de projeto e `40_RECURSOS/LEGADO/`); caminhos de sessão corrigidos de `sessoes/` para `SESSOES/`. §8.5: todos os caminhos de subpastas referenciados nos exemplos de hub de área corrigidos para UPPERCASE (`SESSOES/`, `DECISOES/`, `TAREFAS/`, `PESQUISAS/`, `CONTROLES/`). §10: entradas históricas com caminhos lowercase atualizadas para UPPERCASE; nova entrada registrando a decisão de 2026-05-17. §11: entradas históricas com caminhos lowercase atualizadas para UPPERCASE. Auditoria de privacidade: mudanças puramente estruturais — sem PII, sem credenciais, sem caminhos sensíveis novos.
+- **2026-08-12** — §2: `FAMILIA/` e `TI/` deixam de ser placeholders; `LIVROS/` e `CONCURSOS/` adicionadas à árvore; índice raiz renomeado e `BASE-home.base` explicitado. §3: exceção de nomeação da árvore de concursos documentada; `DOCUMENTACOES/` e `AUDITORIAS/` acrescentados à lista de subdiretórios estruturais. §4: `auditoria` no enum `tipo`; `claude_context` e `aliases` documentados no `_PROJETO.md`. §6: templates `DOCUMENTACAO` e `AUDITORIA` na tabela; injeção de tag de contexto e link de hub pelos templates project-scoped; tag `contexto/` derivada da categoria. §7: referência corrigida para `BASE-home.base` (o arquivo antes documentado não existe). §8: obrigatoriedade da tag de contexto estendida de tarefas para toda nota. §8.5: `MOC-inicio.md` nas três referências e nota sobre a colisão desfeita. §10: quatro decisões de 2026-08-12. Auditoria de privacidade: conteúdo estrutural; instâncias concretas da árvore de concursos, nomes de pessoas em `FAMILIA/` e títulos da biblioteca não são citados.
 - **2026-07-21** — §6: convenção de templates reescrita para distinguir os dois mecanismos (Templater para criação manual, `{{VARIAVEL}}` obrigatório em templates consumidos por script) e documentar a exigência de aspas em placeholders no frontmatter; a orientação anterior de "migrar para Templater oportunisticamente" foi removida por ser incompatível com a geração automatizada. Nova decisão em §10. Auditoria de privacidade: conteúdo estritamente técnico-estrutural — sem PII, credenciais ou caminhos; o projeto concretamente afetado pelo bug não é identificado.
 
 ---
