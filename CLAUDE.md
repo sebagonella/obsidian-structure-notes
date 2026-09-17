@@ -1,9 +1,9 @@
-# CLAUDE.md — Vault Obsidian (raiz)
+# CLAUDE.md — Regras de Privacidade (Público)
 
 Este vault é o "cérebro" pessoal e profissional do usuário. Contém notas, projetos, referências e contextos sensíveis. Claude Code opera neste vault com **dois modos de trabalho** que precisam ser distinguidos a cada interação:
 
 1. **Modo privado** (default): qualquer caminho exceto `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/`. Claude tem acesso total aos conteúdos reais.
-2. **Modo público**: ao tocar em `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/`, valem as regras adicionais de `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/CLAUDE.md`. Sempre leia esse arquivo antes de editar lá.
+2. **Modo público**: ao tocar em `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/`, valem as regras adicionais deste arquivo. Sempre leia-o por inteiro antes de editar lá.
 
 Por brevidade, o restante deste documento usa o alias `<PUBLICO>` para `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/`. **No conteúdo escrito (não em referências de comando), sempre expandir para o caminho completo.**
 
@@ -23,7 +23,6 @@ vault/
     │       │   ├── ARCHITECTURE.md
     │       │   └── CLAUDE.md
     │       └── PRIVADO/        # documentação interna; nunca sai do vault
-    │           └── PROMPTS/    # biblioteca de prompts (ex.: bootstrap-publico.md)
     └── 02_SCRIPTS/
         └── sync-publico.sh     # PUBLICO/ → clone local do repo público
 ```
@@ -35,8 +34,8 @@ Para o restante (`10_CALENDARIO/`, `20_PROJETOS/`, `30_AREAS/`, `40_RECURSOS/`, 
 ## Princípios de operação
 
 - **Não inventar estrutura.** Antes de criar pastas/arquivos novos, varrer o vault e propor onde encaixar.
-- **Frontmatter consistente.** Toda nota gerada/modificada por Claude preserva ou propõe frontmatter YAML (created, tags, type, status quando aplicável).
-- **Templates como fonte da verdade.** Mudanças em fluxos de captura propagam para `templates/`.
+- **Frontmatter consistente.** Toda nota gerada/modificada por Claude preserva ou propõe frontmatter YAML (`data`, `tipo`, `status`, `tags` quando aplicável).
+- **Templates como fonte da verdade.** Mudanças em fluxos de captura propagam para `00_SISTEMA/01_TEMPLATES/`.
 
 ---
 
@@ -80,4 +79,4 @@ Sem essas variáveis, `/doc-sync` aborta na pré-condição. O script real é `0
 - **Mudanças estruturais** → atualizar primeiro o vault, depois rodar `/doc-update` para propor edições em [`ARCHITECTURE.md`](ARCHITECTURE.md).
 - **Antes de qualquer push para o repo público** → rodar `/doc-audit` e depois `/doc-sync`. Só executar o sync real (sem `--dry-run`) após revisar o dry-run.
 - **Dúvida sobre o que pode virar público** → assumir privado e perguntar.
-- **Bootstrap inicial de PUBLICO/** → usar o prompt em `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PRIVADO/PROMPTS/bootstrap-publico.md`.
+- **Bootstrap inicial de PUBLICO/** → usar o prompt mantido na documentação privada do vault (fora desta pasta).

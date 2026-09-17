@@ -40,13 +40,13 @@ A separação não é casual: a pasta `PUBLICO/` vive dentro de um vault maior c
 
 ## Como é mantido
 
-A documentação é mantida em conjunto com o vault, usando [Claude Code](https://www.anthropic.com/claude-code). Três slash commands automatizam o ciclo:
+A documentação é mantida em conjunto com o vault, usando [Claude Code](https://www.anthropic.com/claude-code) e, sobre o mesmo contexto, o Antigravity CLI. Três skills (lidas pelos dois CLIs) automatizam o ciclo:
 
 - `/doc-update` — detecta mudanças arquiteturais no vault e propõe edições aqui
 - `/doc-audit` — auditoria de privacidade antes de qualquer push
 - `/doc-sync` — dry-run do script de sync, varredura final por padrões de risco e proposta de commit message
 
-Um subagent dedicado (`privacy-reviewer`) opera em contexto isolado para auditar conteúdo candidato a publicação, reduzindo o risco de vazamento por inferência.
+Um subagent dedicado (`privacy-reviewer`), espelhado nos dois CLIs, opera em contexto isolado para auditar conteúdo candidato a publicação, reduzindo o risco de vazamento por inferência.
 
 A regra-gatilho declarada no `CLAUDE.md` raiz do vault é: **toda mudança estrutural propaga para [`ARCHITECTURE.md`](ARCHITECTURE.md)**, antes de qualquer sync.
 

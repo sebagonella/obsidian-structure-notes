@@ -8,11 +8,11 @@
 
 ## 1. Propósito
 
-Este vault funciona como **memória persistente** do agente assistente (Claude Code) e como sistema de pensamento e referência integrado, em português, para projetos pessoais e profissionais. Os objetivos são:
+Este vault funciona como **memória persistente** dos agentes assistentes (Claude Code e Antigravity CLI, que leem o mesmo contexto e as mesmas skills) e como sistema de pensamento e referência integrado, em português, para projetos pessoais e profissionais. Os objetivos são:
 
 - Capturar informação rapidamente, em múltiplos canais.
 - Reduzir fricção entre captura, revisão e arquivamento.
-- Manter contexto reutilizável entre sessões com agentes (Claude Code).
+- Manter contexto reutilizável entre sessões com agentes, independentemente de qual CLI está em uso.
 - Servir de base para automações de manutenção (logs diários, agregação de períodos, validação de metadados).
 
 ---
@@ -33,7 +33,8 @@ vault/
 │   │       └── PRIVADO/                   # documentação e prompts internos
 │   ├── 01_TEMPLATES/                      # templates do Obsidian (Templater)
 │   ├── 02_SCRIPTS/                        # scripts Python e shell de manutenção
-│   └── 03_ANEXOS/                         # binários (Canvas, Excalidraw, PDFs, áudios)
+│   ├── 03_ANEXOS/                         # binários (Canvas, Excalidraw, PDFs, áudios)
+│   └── 04_ESTADO/SESSOES/                 # sessões de agente ATIVAS (um JSON por sessão; auto-gerado, não editar)
 ├── 10_CALENDARIO/                         # notas periódicas
 │   ├── 01_DAILY/                          # YYYY/MM/YYYY-MM-DD.md
 │   ├── 02_WEEKLY/                         # YYYY/YYYY-Www.md
@@ -60,7 +61,9 @@ vault/
 ├── 99_INBOX/                              # captura crua, antes da triagem
 ├── MOC-inicio.md                          # índice geral do vault
 ├── BASE-home.base                         # base do plugin Bases (§7)
-└── .claude/                               # commands, skills locais e subagents do Claude Code
+├── .claude/                               # CLAUDE.md do vault, skills locais e subagents (Claude Code)
+├── .agents/                               # camada do Antigravity CLI: rule always_on, skills.json, custom agents (§7)
+└── .vault-locks/                          # travas de escrita por máquina (dotfile; fora do Sync — §9)
 ```
 
 **Justificativas:**
@@ -79,7 +82,7 @@ vault/
 
 Padrão `NN_NOME` em caixa alta com underscore para o primeiro nível (`00_SISTEMA`, `10_CALENDARIO`, `20_PROJETOS`, `30_AREAS`, `40_RECURSOS`, `99_INBOX`). Subpastas dentro de cada categoria também seguem o padrão `NN_NOME`. Pastas de projeto usam `NN_slug-em-kebab-case` dentro de `20_PROJETOS/<categoria>/`.
 
-**Subdiretórios estruturais — UPPERCASE obrigatório.** Todos os subdiretórios dentro de `00_SISTEMA`, `10_CALENDARIO`, `20_PROJETOS`, `30_AREAS`, `40_RECURSOS` e `99_INBOX` devem ser criados em caixa alta, com duas exceções: (1) slugs de projeto (ex.: `03_home-lab`) permanecem lowercase, pois são usados como tags e no campo `projeto:` do frontmatter — convenção de tags exige lowercase; (2) `40_RECURSOS/LEGADO/` e seus subdiretórios são isentos (conteúdo histórico importado). Subdiretórios estruturais típicos: `SESSOES/`, `DECISOES/`, `TAREFAS/`, `PESQUISAS/`, `DOCUMENTACOES/`, `AUDITORIAS/`, `CONTROLES/`, `REALOCACAO/`.
+**Subdiretórios estruturais — UPPERCASE obrigatório.** Todos os subdiretórios dentro de `00_SISTEMA`, `10_CALENDARIO`, `20_PROJETOS`, `30_AREAS`, `40_RECURSOS` e `99_INBOX` devem ser criados em caixa alta, com duas exceções: (1) slugs de projeto (ex. fictício: `01_exemplo-projeto`) permanecem lowercase, pois são usados como tags e no campo `projeto:` do frontmatter — convenção de tags exige lowercase; (2) `40_RECURSOS/LEGADO/` e seus subdiretórios são isentos (conteúdo histórico importado). Subdiretórios estruturais típicos: `SESSOES/`, `DECISOES/`, `TAREFAS/`, `PESQUISAS/`, `DOCUMENTACOES/`, `AUDITORIAS/`, `CONTROLES/`, `REALOCACAO/`.
 
 **Exceção — árvore de concursos.** `30_AREAS/CARREIRA/CONCURSOS/<ORGAO>_<ANO>[_PREVISTO]/` segue convenção própria, mantida por automação externa ao vault: estágios numerados em `NN-NOME` (hífen, não underscore), pastas especiais com prefixo `_` para conteúdo compartilhado entre cargos, sufixo `_PREVISTO` quando ainda não há edital publicado, e subpastas de conteúdo em lowercase. A regra UPPERCASE não se aplica nesse subtree — normalizá-lo à mão quebra a automação que mantém a árvore.
 
@@ -114,6 +117,7 @@ Toda nota processada pelo Claude Code recebe ou preserva frontmatter YAML mínim
 
 ```yaml
 ---
+# valores ilustrativos
 data: 2025-03-14
 data_atualizacao: 2025-03-14 09:30
 tipo: daily | weekly | monthly | yearly | projeto | sessao | sessao-vault |
@@ -133,6 +137,8 @@ tags: []
 - **Notas dentro de `30_AREAS/...`:** **obrigatoriamente** `area: <slug>` no frontmatter. Slug = nome da subpasta de área em minúsculas (ex.: `area: saude`, `area: vault`). Regra simétrica à de `projeto: <slug>`; aplica-se a notas operacionais (tarefas, decisões, pesquisas) dentro da área. Tarefas inline dentro de `30_AREAS/` usam `#area/<slug>` — mesma obrigatoriedade da regra de `20_PROJETOS/`. MOCs e sub-MOCs auto-gerados ficam isentos.
 - **Pesquisa:** acrescenta `notebook_id`, `fontes`.
 - **Saúde:** notas da área de saúde possuem campos numéricos para acompanhamento longitudinal (métricas físicas, sinais vitais, atividade). Os campos específicos não aparecem nesta documentação por convenção de privacidade.
+
+**Proveniência de IA.** Toda nota criada por script registra qual agente a produziu: `engine` (`claude-code`, `antigravity`, ...), `modelo` (id do modelo vivo — **vazio quando desconhecido**), `engine_versao`, `session_id` (o mesmo id do registro de sessões ativas em `00_SISTEMA/04_ESTADO/SESSOES/`) e `host` (máquina que gerou a nota). Os valores são detectados pelo carregador de templates a partir do ambiente do CLI; o modelo só existe via um cache alimentado pela statusLine do Claude Code, porque nenhum CLI o expõe em variável de ambiente. Campo vazio é proposital: melhor vazio que um chute gravado como fato. A tag `origem/<engine>` espelha `engine` e nunca é escrita fixa em template ou script.
 
 **Princípio:** o frontmatter é a fonte de queries (Dataview, Tasks, Tracker). Tags hierárquicas servem para filtragem visual; valores únicos por nota ficam no frontmatter, sem duplicação.
 
@@ -156,7 +162,8 @@ tags: []
                                                      │
                                        ┌──────────────────────────┐
                                        │  Sessão do agente        │
-                                       │  (Claude Code)           │
+                                       │  (Claude Code /          │
+                                       │   Antigravity CLI)       │
                                        └─────────────┬────────────┘
                                                      │
                                                      ▼
@@ -184,7 +191,7 @@ Extensão de navegador grava em `99_INBOX/` com `tipo: webclipper` e `tags: [ori
 
 ### 5.3 Captura via pesquisa externa (NotebookLM)
 
-Um script orquestra `pergunta → notebook → sumarização → nota Markdown` no projeto correspondente, criando `pesquisas/YYYY-MM-DD-slug.md` com `tipo: pesquisa` e `tags: [origem/notebooklm]`. A interação com o serviço externo fica no script; o vault só guarda o resultado em texto.
+Um script orquestra `pergunta → notebook → sumarização → nota Markdown` no projeto correspondente, criando `PESQUISAS/YYYY-MM-DD-slug.md` com `tipo: pesquisa` e `tags: [origem/notebooklm]`. A interação com o serviço externo fica no script; o vault só guarda o resultado em texto.
 
 ### 5.4 Captura por sessão de trabalho
 
@@ -193,11 +200,15 @@ Toda sessão do agente (manutenção do vault ou desenvolvimento de projeto téc
 1. Uma nota de sessão padronizada (`tipo: sessao`), em pasta apropriada à modalidade.
 2. Uma linha no Log do Dia da nota daily correspondente.
 
-Skills locais do vault (`/vault-start`, `/vault-end`, `/vault-log`) e skills globais (`/session-start`, `/session-end`) automatizam o ciclo.
+Skills locais do vault (`/vault-start`, `/vault-end`, `/vault-log`) e skills globais (`/session-start`, `/session-end`) automatizam o ciclo, e valem nos dois CLIs (§7). A nota de sessão carrega a lista **completa** dos itens criados (wikilinks); a daily recebe só resumo, destaques e o link para a sessão — cadeia navegável daily → sessão → itens, para que nada nasça órfão no grafo.
 
 ### 5.5 Importação de legados
 
 Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECURSOS/LEGADO/`, preservando data e origem em frontmatter (`tipo: legado`, `origem_sistema: <nome>`). Esses scripts rodam sob demanda, fora do fluxo diário.
+
+### 5.6 Captura rápida com contexto derivado
+
+Skills `/capturar` (fato, ideia, tarefa) e `/decidir` (ADR) criam a nota já na pasta certa, com `tipo`, `status`, campo de contexto (`projeto:`/`area:`), tag de contexto e proveniência preenchidos a partir da pasta de destino — a nota nasce válida para o validador de metadados. Sem contexto claro, cai em `99_INBOX/` com `#inbox`.
 
 ---
 
@@ -229,7 +240,7 @@ Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECU
 
 **Placeholders no frontmatter exigem aspas.** No frontmatter, todo placeholder vai citado (`campo: "{{VARIAVEL}}"`); no corpo da nota, sem aspas. Sem as aspas, `campo: {{VARIAVEL}}` é YAML ambíguo — o parser interpreta como um mapping cuja chave é outro mapping, e qualquer ferramenta que re-serialize o frontmatter corrompe o template em silêncio. O carregador consome as aspas ao substituir, preservando o tipo nativo do valor (campo numérico continua numérico na nota gerada); placeholder sem valor permanece literal e emite aviso, e as aspas garantem que o frontmatter siga válido mesmo nesse caso.
 
-**Templates project-scoped injetam contexto.** `PROJETO`, `SESSAO-PROJETO`, `DECISAO`, `PESQUISA`, `TAREFA`, `DOCUMENTACAO` e `AUDITORIA` emitem, além do campo `projeto: <slug>`, a tag de contexto `projeto/<slug>` em `tags:` e a linha `> **Projeto:** [[<slug>]]` no corpo. A tag garante o agrupamento nas queries de MOC; a linha no corpo liga a nota ao hub e a mantém fora do conjunto de notas órfãs no grafo.
+**Templates project-scoped injetam contexto.** `PROJETO`, `SESSAO-PROJETO`, `DECISAO`, `PESQUISA`, `TAREFA`, `DOCUMENTACAO` e `AUDITORIA` emitem, além do campo `projeto: <slug>`, a tag de contexto `projeto/<slug>` em `tags:` e a linha `> **Projeto:** [[<slug>]]` no corpo. A tag garante o agrupamento nas queries de MOC; a linha no corpo liga a nota ao hub e a mantém fora do conjunto de notas órfãs no grafo. O carregador injeta também `{{ENGINE}}` por padrão em qualquer template, de modo que `engine:` e `origem/<engine>` saiam corretos seja qual for o CLI que criou a nota.
 
 **Tag de contexto derivada da categoria.** A tag `contexto/<valor>` dos templates de projeto é resolvida a partir da categoria da pasta (`PESSOAL` → `contexto/pessoal`, `PROFISSIONAL` → `contexto/profissional`), não fixada no template. Categoria não reconhecida cai em `profissional` com aviso explícito.
 
@@ -245,7 +256,7 @@ Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECU
 
 | Componente                                | Papel                                                                  |
 |-------------------------------------------|------------------------------------------------------------------------|
-| Obsidian + Local REST API (plugin)        | Editor primário e endpoint local consumido pelo agente                 |
+| Obsidian + Local REST API (plugin, com servidor MCP nativo) | Editor primário; endpoint local **e** servidor MCP consumido pelos agentes, sem ponte intermediária; transporte local, credencial por máquina |
 | Obsidian — Templater                      | Engine de templates                                                    |
 | Obsidian — Dataview                       | Queries em MOCs e listas dinâmicas                                     |
 | Obsidian — Tasks                          | Indexação de tarefas inline                                            |
@@ -254,15 +265,18 @@ Utilitários pontuais migram conteúdo de outros sistemas de notas para `40_RECU
 | Obsidian — Contribution Graph             | Heatmaps anuais (consistência de hábitos, contagem por dia)            |
 | Obsidian — Linter                         | Mantém `data_atualizacao` consistente                                  |
 | Obsidian — Smart Connections              | Indexação semântica local (estado fora de versão)                      |
-| Google Drive                              | Sync entre dispositivos do vault                                       |
-| Claude Code (CLI) + MCP Obsidian          | Manutenção do vault e desta documentação via REST API local            |
-| Subagent `privacy-reviewer`               | Auditor isolado de privacidade para conteúdo candidato a publicação    |
+| Obsidian Sync                             | Sync do conteúdo entre dispositivos (notas, scripts, templates, `.obsidian/`); **não** carrega dotfiles; conflitos como *conflict file*, nunca merge automático (§9) |
+| Google Drive                              | Sync de arquivos entre dispositivos, coexistindo com o Obsidian Sync   |
+| Claude Code (CLI)                         | Manutenção do vault e desta documentação; skills locais em `.claude/skills/`, subagents em `.claude/agents/` |
+| Antigravity CLI                           | Segundo agente sobre o mesmo contexto: `.agents/rules/` aponta para o `CLAUDE.md` do vault, `.agents/skills.json` registra `.claude/skills/` (as skills viram slash commands), `.agents/agents/` carrega custom agents |
+| Subagent `privacy-reviewer`               | Auditor isolado de privacidade para conteúdo candidato a publicação; existe nos dois CLIs (subagent no Claude Code, custom agent no Antigravity) com corpo idêntico |
+| Repositório git privado (pastas de IA)    | Transporte entre máquinas de `.claude/`, `.agents/` e do contexto global do usuário, que o Obsidian Sync ignora; script bidirecional com manifesto de checksums e bootstrap por máquina (§9) |
 | NotebookLM                                | Pesquisa externa cujo resultado é consolidado como nota                |
 | GitHub (repositório público)              | Espelho de `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PUBLICO/`             |
 
 Credenciais, tokens, hosts e endpoints internos **não** aparecem nesta documentação. Configurações sensíveis vivem em `00_SISTEMA/00_DOCUMENTACOES/01_VAULT/PRIVADO/` e em variáveis de ambiente fora do vault.
 
-**Espelhamento da pasta pública:** um script `rsync` (`00_SISTEMA/02_SCRIPTS/sync-publico.sh`) copia esta pasta para um clone local do repositório público, mantido **fora** do vault e fora do Google Drive. O script roda obrigatoriamente em `--dry-run` antes de qualquer cópia real, e nunca executa `git commit` ou `git push` — a confirmação humana e a publicação ficam fora do script. A separação física do clone reduz risco de leak por filtro de path mal configurado em estratégias de submodule ou subtree.
+**Espelhamento da pasta pública:** um script `rsync` (`00_SISTEMA/02_SCRIPTS/sync-publico.sh`) copia esta pasta para um clone local do repositório público, mantido **fora** do vault e fora de qualquer pasta sincronizada. O script roda obrigatoriamente em `--dry-run` antes de qualquer cópia real, e nunca executa `git commit` ou `git push` — a confirmação humana e a publicação ficam fora do script. A separação física do clone reduz risco de leak por filtro de path mal configurado em estratégias de submodule ou subtree.
 
 ---
 
@@ -272,7 +286,7 @@ Credenciais, tokens, hosts e endpoints internos **não** aparecem nesta document
 - Hierarquia por `/`: `contexto/profissional`, `tipo/projeto`, `ti/python`.
 - Famílias estabelecidas:
   - `contexto/{pessoal, profissional}`
-  - `origem/{claude-code, manual, webclipper, notebooklm, ...}`
+  - `origem/{claude-code, antigravity, manual, webclipper, notebooklm, ...}` — espelha o campo `engine` quando a nota é gerada por agente
   - `tipo/{...}` — espelha o frontmatter `tipo`
   - `status/{...}` — espelha o frontmatter `status`
   - `ti/{python, obsidian, ...}`
@@ -285,7 +299,7 @@ Credenciais, tokens, hosts e endpoints internos **não** aparecem nesta document
 
 **Tags de contexto obrigatórias.** Toda **nota** criada ou editada em `20_PROJETOS/`, `30_AREAS/` ou `40_RECURSOS/` deve carregar a tag de contexto correspondente (`projeto/<slug>`, `area/<slug>` ou `recurso/<slug>`) no frontmatter, **e** toda tarefa inline deve repeti-la na própria linha (`#projeto/<slug>` etc.). Requisito do `group by function` nas queries de MOC — sem a tag, a nota ou tarefa cai no grupo `(sem contexto)` em vez do agrupamento correto, mesmo estando no path certo. Notas em `40_RECURSOS/LEGADO/` são isentas. Os templates emitem a tag automaticamente; notas criadas fora deles precisam da tag manual.
 
-**Convenção interna por hub.** Áreas com muitas subdivisões podem usar uma família de tag local fora das oficiais — o caso atual é `saude/<subarea>` (notas em `30_AREAS/SAUDE/METRICAS/`), com subáreas como `diario`, `sono`, `treino`, `peso`, `pressao`, `glicose`, `analise`. Funciona como recorte visual; queries quantitativas se apoiam em `tipo` + path scope, não em tag.
+**Convenção interna por hub.** Áreas com muitas subdivisões podem usar uma família de tag local fora das oficiais — o caso atual é `saude/<subarea>` (notas em `30_AREAS/SAUDE/METRICAS/`), com subáreas nomeadas pela métrica ou rotina acompanhada (ex.: `diario`, `sono`, `treino`). Funciona como recorte visual; queries quantitativas se apoiam em `tipo` + path scope, não em tag.
 
 ---
 
@@ -326,14 +340,25 @@ Hubs de área seguem o mesmo padrão `MOC-<nome>.md` na raiz da subpasta. Exempl
 - **Semanal/Mensal/Anual:** rodar os reviews periódicos via skills locais (`/weekly-review`, `/monthly-review`, `/yearly-review`), que agregam o nível imediatamente abaixo.
 - **Sob demanda — área de saúde:** skill local `/analise-saude` gera relatório informativo (não-diagnóstico) de janelas pré-definidas (7d/30d/6m/1y/all) a partir das métricas longitudinais da área. Output em `30_AREAS/SAUDE/METRICAS/ANALISES/`.
 - **Sob demanda:** validação de metadados em `20_PROJETOS/` (script de validação roda em dry-run por padrão); arquivamento de projetos concluídos via skill local `/projeto-arquivar`, que move a pasta para `20_PROJETOS/ARQUIVADOS/<categoria>/<YYYY>/<slug>/` e marca `status: arquivado`.
+- **Sob demanda — higiene:** `/vault-auditar` (metadados, YAML, grafo; só leitura, oferece correção), `/inbox-triar` (triagem assistida de `99_INBOX/`), `/conectar` (notas sem wikilink de saída → hub), `/area-review` (panorama de uma área).
 - **Trimestral:** auditoria de convenções; rodar `/doc-update` (propõe edições nesta `ARCHITECTURE.md`) e `/doc-audit` (auditoria de privacidade).
 
-### Papel do Claude Code
+### Papel dos agentes
+
+Vale para Claude Code e Antigravity CLI: ambos leem o mesmo `CLAUDE.md` e as mesmas skills.
 
 - Sugere classificação para itens em `99_INBOX/`.
 - Mantém `_PROJETO.md` atualizado a cada sessão de projeto técnico.
 - Propõe atualizações nesta `ARCHITECTURE.md` quando detecta mudanças estruturais (regra-gatilho descrita no `CLAUDE.md` raiz do vault).
 - **Não move ou exclui notas sem confirmação explícita.** Reclassificações enviam para `99_INBOX/`, não deletam.
+
+### Concorrência entre sessões
+
+Mais de uma sessão pode rodar ao mesmo tempo (janelas, CLIs ou máquinas diferentes). Nomes de nota são **reservados** na criação e sufixados (`-2`, `-3`) em colisão; arquivos compartilhados (daily, `_PROJETO.md`) são escritos sob trava + escrita atômica, com travas em `.vault-locks/` (dotfile: fora do índice do Obsidian e do Sync — a trava vale por máquina). Entre máquinas **não há lock distribuído**: o registro de sessões ativas em `00_SISTEMA/04_ESTADO/SESSOES/` é aviso, não exclusão mútua, e usa um arquivo por sessão para que o Sync nunca tenha o que mesclar. Conflitos do Sync são resolvidos por script: o Log do Dia da daily é unido automaticamente (dedup + ordem por hora); qualquer outra nota só recebe diff — escolher um lado seria descartar trabalho em silêncio.
+
+### Pastas de IA entre máquinas
+
+O Obsidian Sync ignora dotfiles. `.claude/`, `.agents/` e o contexto global do usuário viajam por um repositório git privado, com script bidirecional que compara repo, máquina e manifesto de checksums e classifica cada arquivo (em dia / mudou no repo / mudou na máquina / conflito / só de um lado); rodar na direção errada bloqueia em vez de sobrescrever. `/vault-start` puxa e aplica; `/vault-end` captura, commita e empurra. O que é por máquina (variáveis de ambiente, credenciais, permissões locais, workspaces confiáveis) não entra no repo — um script de bootstrap idempotente o gera.
 
 ### Sincronização com o repositório público
 
@@ -368,7 +393,7 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 | 2026-05-11 | Manutenção e governança do próprio vault tratadas como **área contínua** em `30_AREAS/VAULT/`; campo `area: <slug>` torna-se obrigatório em notas operacionais sob `30_AREAS/...` (simétrico a `projeto: <slug>`) | Trabalho recorrente, sem data de fim; sessões pontuais vivem em `30_AREAS/VAULT/SESSOES/`. Frontmatter explícito viabiliza queries determinísticas por área no Dataview/Tasks |
 | 2026-05-11 | Sessões de manutenção do vault migradas de `10_CALENDARIO/01_DAILY/sessoes-vault/` para `30_AREAS/VAULT/SESSOES/`, com `area: vault` normalizado em todas as sessões existentes | Coerência com o modelo de área contínua: tudo ligado à governança do vault concentra-se no mesmo hub, simétrico a `20_PROJETOS/<slug>/SESSOES/` |
 | 2026-05-13 | Campo `repo` no `_PROJETO.md` desdobrado em dois: `repo_local` (caminho absoluto no FS) e `repo_git` (URL HTTPS do remote git, vazia se não houver) | Semântica explícita habilita automações futuras (abrir no GitHub, validar remote, sincronizar status de PR) sem ambiguidade entre path local e URL remota |
-| 2026-05-13 | Particionamento `YYYY/MM/<nota>` formalizado como convenção genérica para subpastas de área com alta cardinalidade diária | Espelha o agrupamento do calendário; evita diretórios planos; receita de migração já validada em três subpastas distintas (DIARIO, SONO, TREINOS na área de saúde) |
+| 2026-05-13 | Particionamento `YYYY/MM/<nota>` formalizado como convenção genérica para subpastas de área com alta cardinalidade diária | Espelha o agrupamento do calendário; evita diretórios planos; receita de migração já validada em três subpastas distintas da área de saúde |
 | 2026-05-15 | Tags de contexto (`projeto/`, `area/`, `recurso/`) obrigatórias em toda tarefa inline e nota `tipo: tarefa`; padrão de duas seções (`## Tarefas pendentes` Tasks + `## Tarefas pendentes tipo notas` Dataview) em todo MOC e `_PROJETO.md`; `group by function` em MOCs de contexto; `pendente` como default em `TAREFA.md` | Garantia de agrupamento consistente no `group by function`; tarefas sem tag ficavam no grupo `(sem contexto)` em vez do contexto correto |
 | 2026-05-16 | `30_AREAS/HOME/` criada como área contínua de manutenção, reparos e organização da casa | Área de responsabilidade sem data de fim; estrutura mínima com `MOC-home.md` + `TAREFAS/` segue o padrão de hub de área estabelecido |
 | 2026-05-17 | Subdiretórios estruturais padronizados para UPPERCASE em todo o vault (`SESSOES/`, `DECISOES/`, `TAREFAS/`, `PESQUISAS/`, `CONTROLES/`, `REALOCACAO/`); exceções: slugs de projeto (lowercase para compatibilidade com tags e campo `projeto:`) e `40_RECURSOS/LEGADO/` (conteúdo histórico isento) | Uniformidade na navegação; slugs de projeto permanecem lowercase por serem usados como tags e valores de frontmatter |
@@ -377,6 +402,12 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 | 2026-08-12 | Tag de contexto obrigatória em toda nota dos contextos, não apenas em tarefas; templates project-scoped passam a emiti-la | Sem a tag, a nota some das queries `group by` do MOC mesmo estando no path correto |
 | 2026-08-12 | Tag `contexto/<valor>` derivada da categoria do projeto em vez de fixa no template | O valor fixo `profissional` marcava incorretamente notas de projetos pessoais |
 | 2026-08-12 | `aliases: [<slug>]` emitido pelo template `PROJETO.md` | O alias é o alvo de `[[<slug>]]`; hubs criados sem ele deixavam todos os links internos do projeto sem resolver |
+| 2026-08-30 | Proveniência de IA (`engine`, `modelo`, `engine_versao`, `session_id`, `host`) em toda nota gerada por script; `modelo` fica vazio quando desconhecido | Vault multi-engine exige saber quem escreveu o quê; vazio é melhor que chute gravado como fato |
+| 2026-08-30 | Sem lock distribuído entre máquinas: travas por máquina + registro de sessões ativas como aviso + conflitos do Sync como *conflict file* reconciliados por script | Lock distribuído sobre sync eventual é falso conforto; arquivo por sessão elimina o que haveria para mesclar |
+| 2026-09-14 | MCP Obsidian servido pelo próprio plugin Local REST API, sem ponte intermediária | Uma dependência a menos; o plugin já é o endpoint que o agente consumia |
+| 2026-09-15 | Pastas de IA (`.claude/`, `.agents/`) transportadas por repositório git privado, bidirecional, com manifesto | Obsidian Sync não carrega dotfiles; fluxo só-de-ida viraria drift porque as skills são editadas nas sessões |
+| 2026-09-16 | Camada Antigravity CLI **apontada, não gerada**: `.agents/skills.json` → `.claude/skills/` e rule `always_on` → `CLAUDE.md` do vault | Dois donos para o mesmo texto viram drift; skills são o padrão aberto que os dois CLIs leem |
+| 2026-09-17 | `privacy-reviewer` espelhado como custom agent do Antigravity (corpo idêntico, frontmatter próprio); contexto global do usuário entra no mesmo transporte git, substituindo espelhamento manual | Isolamento de contexto é o motivo de existir do auditor; espelho manual já havia divergido em silêncio |
 
 ---
 
@@ -395,8 +426,9 @@ Lista enxuta de decisões arquiteturais. Mudanças significativas geram nova ent
 - **2026-05-15** — §2: `30_AREAS/FAMILIA/`, `/GARAGEM/`, `/TRABALHO/` e `40_RECURSOS/TI/` marcadas como placeholders intencionais (diretórios vazios). §7: plugin Obsidian Bases adicionado à tabela de integrações. §8.5: regra de exclusão de `00_SISTEMA/00_DOCUMENTACOES/` e `00_SISTEMA/01_TEMPLATES/` das queries Tasks e Dataview documentada.
 - **2026-05-16** — `30_AREAS/HOME/` materializada como área contínua de manutenção e reparos da casa: `MOC-home.md` criado com subpasta `TAREFAS/`; `30_AREAS/MOC-areas.md` atualizado com link direto ao hub. §2 (árvore de `30_AREAS/`) e §8.5 (exemplos de hub de área) atualizados; nova decisão em §10.
 - **2026-05-17** — §3: regra UPPERCASE obrigatório para subdiretórios estruturais documentada, com exceções (slugs de projeto e `40_RECURSOS/LEGADO/`); caminhos de sessão corrigidos de `sessoes/` para `SESSOES/`. §8.5: todos os caminhos de subpastas referenciados nos exemplos de hub de área corrigidos para UPPERCASE (`SESSOES/`, `DECISOES/`, `TAREFAS/`, `PESQUISAS/`, `CONTROLES/`). §10: entradas históricas com caminhos lowercase atualizadas para UPPERCASE; nova entrada registrando a decisão de 2026-05-17. §11: entradas históricas com caminhos lowercase atualizadas para UPPERCASE. Auditoria de privacidade: mudanças puramente estruturais — sem PII, sem credenciais, sem caminhos sensíveis novos.
-- **2026-08-12** — §2: `FAMILIA/` e `TI/` deixam de ser placeholders; `LIVROS/` e `CONCURSOS/` adicionadas à árvore; índice raiz renomeado e `BASE-home.base` explicitado. §3: exceção de nomeação da árvore de concursos documentada; `DOCUMENTACOES/` e `AUDITORIAS/` acrescentados à lista de subdiretórios estruturais. §4: `auditoria` no enum `tipo`; `claude_context` e `aliases` documentados no `_PROJETO.md`. §6: templates `DOCUMENTACAO` e `AUDITORIA` na tabela; injeção de tag de contexto e link de hub pelos templates project-scoped; tag `contexto/` derivada da categoria. §7: referência corrigida para `BASE-home.base` (o arquivo antes documentado não existe). §8: obrigatoriedade da tag de contexto estendida de tarefas para toda nota. §8.5: `MOC-inicio.md` nas três referências e nota sobre a colisão desfeita. §10: quatro decisões de 2026-08-12. Auditoria de privacidade: conteúdo estrutural; instâncias concretas da árvore de concursos, nomes de pessoas em `FAMILIA/` e títulos da biblioteca não são citados.
 - **2026-07-21** — §6: convenção de templates reescrita para distinguir os dois mecanismos (Templater para criação manual, `{{VARIAVEL}}` obrigatório em templates consumidos por script) e documentar a exigência de aspas em placeholders no frontmatter; a orientação anterior de "migrar para Templater oportunisticamente" foi removida por ser incompatível com a geração automatizada. Nova decisão em §10. Auditoria de privacidade: conteúdo estritamente técnico-estrutural — sem PII, credenciais ou caminhos; o projeto concretamente afetado pelo bug não é identificado.
+- **2026-08-12** — §2: `FAMILIA/` e `TI/` deixam de ser placeholders; `LIVROS/` e `CONCURSOS/` adicionadas à árvore; índice raiz renomeado e `BASE-home.base` explicitado. §3: exceção de nomeação da árvore de concursos documentada; `DOCUMENTACOES/` e `AUDITORIAS/` acrescentados à lista de subdiretórios estruturais. §4: `auditoria` no enum `tipo`; `claude_context` e `aliases` documentados no `_PROJETO.md`. §6: templates `DOCUMENTACAO` e `AUDITORIA` na tabela; injeção de tag de contexto e link de hub pelos templates project-scoped; tag `contexto/` derivada da categoria. §7: referência corrigida para `BASE-home.base` (o arquivo antes documentado não existe). §8: obrigatoriedade da tag de contexto estendida de tarefas para toda nota. §8.5: `MOC-inicio.md` nas três referências e nota sobre a colisão desfeita. §10: quatro decisões de 2026-08-12. Auditoria de privacidade: conteúdo estrutural; instâncias concretas da árvore de concursos, nomes de pessoas em `FAMILIA/` e títulos da biblioteca não são citados.
+- **2026-09-17** — §1 e §5.4: vault passa a ser multi-engine (Claude Code + Antigravity CLI). §2: `00_SISTEMA/04_ESTADO/`, `.agents/`, `.vault-locks/`; `.claude/commands/` removido da descrição. §4: bloco de proveniência de IA. §5: fluxo 5.6 (captura rápida por skill) e cadeia daily → sessão → itens. §6: `{{ENGINE}}` injetado pelo carregador. §7: Obsidian Sync ao lado do Google Drive, MCP nativo do plugin, Antigravity CLI, custom agent espelho, repositório de transporte das pastas de IA; clone público "fora de qualquer pasta sincronizada". §8: `origem/antigravity`. §9: skills de higiene, "Papel dos agentes", blocos de concorrência e de pastas de IA entre máquinas. §10: seis decisões (2026-08-30 a 2026-09-17). Auditoria de privacidade: conteúdo estrutural; nomes de repositório privado, hosts, portas, credenciais e caminhos de máquina não são citados. Dupla checagem pelo `privacy-reviewer` nos dois CLIs: 0 críticos; §8 deixa de listar subáreas de saúde específicas (inferência sobre condição de saúde); a descrição da árvore de concursos e da subpasta `REALOCACAO/` foi avaliada (inferência possível sobre situação profissional) e **mantida por decisão do autor** — não reabrir em auditorias futuras. Changelog reordenado cronologicamente.
 
 ---
 
